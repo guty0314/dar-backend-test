@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Como instalar
 Ejecutar el bat ```crear_venv.bat``` y dejar instalar las librerias. Los que sepan de entornos virtuales en Python pueden instalar desde ```requirements.txt```, sino usar este bat.
 Uso la version de Python 3.13. 
@@ -66,3 +67,7 @@ Agregar la liberia a instalar en ```requirements.txt``` para instalarlo cuando h
     ```
 
 - **Nota sobre `ejecutar_servidor.bat`**: `ejecutar_servidor.bat` ahora define la variable localmente al inicio, de modo que si arrancas el servidor con ese script la variable estará disponible para el proceso (no modifica variables del sistema ni del usuario fuera de ese proceso).
+=======
+# dar-backend
+Dispositivo de Acción de Rápida para el Centro de Gestión de la Seguridad Ciudadana N° 1
+>>>>>>> bf3289371a8407ac26bde5c713da04c6a465c6b8
