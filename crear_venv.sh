@@ -1,0 +1,9 @@
+#!/bin/bash
+echo Creando entorno virtual usando %VERSION%...
+python3 -m venv venv
+echo Creado entorno virtual con exito. Ejecutando entorno virtual...
+source venv/bin/activate
+echo Instalando librerias...
+pip install -r requirements.txt
+echo FINALIZADO
+
