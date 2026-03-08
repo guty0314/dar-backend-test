@@ -21,7 +21,6 @@ class EmergencyServices:
 
         from repositories.emergency_repository import EmergencyRepository
         from services.notifications import send_push_notifications
-
         # Guardar la emergencia en la DB
         emergency_record = EmergencyRepository.create_emergency(
             Emergency(
@@ -226,6 +225,7 @@ class EmergencyServices:
         import asyncio
         # Aquí se debería verificar contra la base de datos de emergencias activas.
         import jwt
+        from datetime import datetime, timedelta
         from jwt.exceptions import InvalidTokenError
         from services.utils import SECRET_KEY, ALGORITHM
         from repositories.emergency_repository import EmergencyRepository
@@ -280,18 +280,26 @@ class EmergencyServices:
                     emergency = EmergencyRepository.get_first_active_emergency()
 
                     if emergency is not None:
+
+                        # verificar si la emergencia expiró (10 minutos)
+                        if datetime.now() - emergency.date_created > timedelta(minutes=10):
+                            emergency.disable_emergency()
+                            await websocket.send_json({})
+                            await asyncio.sleep(3)
+                            continue
+
                         users_data = emergency.get_emergency_users_data()
-                        
+
                         user_ring_result = emergency.generate_emergency_ring().contains(current_user_lat, current_user_lon)
+
                         if user_ring_result in [1, 2]:
                             data = {
-                                "my_zone": user_ring_result, 
+                                "my_zone": user_ring_result,
                                 "emergency_id": emergency.id_emergency,
                                 "emergency_color": emergency.type_emergency.value,
                                 "users_in_ring": users_data
                             }
 
-                    
                     await websocket.send_json(data)
                     await asyncio.sleep(3)  # Esperar antes de la siguiente verificación
 
@@ -302,4 +310,3 @@ class EmergencyServices:
         except Exception as e:
             await websocket.close(code=1008, reason=f"Server error: {e}")
             return
-    
