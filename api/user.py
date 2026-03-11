@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI
 from typing import Annotated, List
 from services.user import UpdateUserData
+from services.email_service import send_user_credentials
 
 def InitUserRoutes(app: FastAPI):
     from models.user import User
@@ -41,6 +42,29 @@ def InitUserRoutes(app: FastAPI):
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
         return UserServices.get_my_position(current_user)
+
+    # ================================
+    # PROBAR ENVIANDO EMAIL
+    # ================================
+
+    @app.post("/test-email")
+    async def test_email():
+        
+        test_email = "tu_correo@gmail.com"
+
+        print("📧 ENVIANDO CORREO DE PRUEBA")
+
+        try:
+            await send_user_credentials(
+                test_email,
+                "usuario_prueba",
+                "ABC123"
+            )
+            return {"message": "Correo enviado correctamente"}
+        
+        except Exception as e:
+            print("⚠️ Error enviando correo:", e)
+            return {"error": str(e)}
 
     # ================================
     # CREAR USUARIO (ADMIN)
