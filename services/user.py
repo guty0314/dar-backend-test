@@ -109,11 +109,14 @@ class UserServices:
         #Se envia la credenciales por correo electronico
         if created_user.email:
             print("📧 INTENTANDO ENVIAR MAIL A:", created_user.email)
-            await send_user_credentials(
-                created_user.email,
-                created_user.username,
-                user.password
-            )
+            try:
+                await send_user_credentials(
+                    created_user.email,
+                    created_user.username,
+                    user.password
+                )
+            except Exception as e:
+                print("Error enviando correo:", e)
         return created_user
 
     @staticmethod
