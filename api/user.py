@@ -50,7 +50,7 @@ def InitUserRoutes(app: FastAPI):
         user: NewUserData,
         current_user: Annotated[User, Depends(admin_required)]
     ):
-        return UserServices.create_user(user, current_user)
+        return await UserServices.create_user(user, current_user)
 
     # ================================
     # LISTAR TODOS LOS USUARIOS (ADMIN)
