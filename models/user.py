@@ -31,6 +31,7 @@ class User(SQLModel, table=True):
     online: bool = Field(default=0)
     last_login: datetime | None = Field(default=None)
     last_position_update: datetime | None = Field(default=None)
+    cuil: str
     
     def get_user_position(self):
         """

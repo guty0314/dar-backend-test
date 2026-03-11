@@ -15,6 +15,10 @@ class NewUserData(BaseModel):
     username: str
     full_name: str
     password: str
+    email: str | None = None
+    number_phone: str | None = None
+    cuil: str | None = None
+    role: str = "agent"
 
 class UpdateUserData(BaseModel):
     full_name: str | None = None
