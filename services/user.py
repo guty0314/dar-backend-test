@@ -6,6 +6,7 @@ from datetime import datetime
 from services.utils import oauth2_scheme
 from repositories.user_repository import UserRepository
 from models.user import User
+from services.email_service import send_user_credentials
 
 print("🔥 SERVICES.USER CARGADO 🔥")
 class NewUserData(BaseModel):
@@ -66,7 +67,7 @@ class UserServices:
         }
 
     @staticmethod
-    def create_user(user: NewUserData, current_user: User) -> User:
+    async def create_user(user: NewUserData, current_user: User) -> User:
 
         # 🔐 Solo admins pueden crear usuarios
         if current_user.role != "admin":
@@ -102,8 +103,18 @@ class UserServices:
             role=user.role,
             online=False
         )
+        # Se guarda el usuario
+        created_user = UserRepository.create_user(new_user)
 
-        return UserRepository.create_user(new_user)
+        #Se envia la credenciales por correo electronico
+        if created_user.email:
+            print("📧 INTENTANDO ENVIAR MAIL A:", created_user.email)
+            await send_user_credentials(
+                created_user.email,
+                created_user.username,
+                user.password
+            )
+        return created_user
 
     @staticmethod
     def logout_user(user: User):
