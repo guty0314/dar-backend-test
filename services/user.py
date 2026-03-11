@@ -95,8 +95,11 @@ class UserServices:
         new_user = User(
             full_name=user.full_name,
             username=user.username,
+            email=user.email,
+            number_phone=user.number_phone,
+            cuil=user.cuil,
             hashed_password=hashed_password,
-            role="agent",  # 👈 por defecto los nuevos usuarios son agentes
+            role=user.role,
             online=False
         )
 
