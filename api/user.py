@@ -44,29 +44,6 @@ def InitUserRoutes(app: FastAPI):
         return UserServices.get_my_position(current_user)
 
     # ================================
-    # PROBAR ENVIANDO EMAIL
-    # ================================
-
-    @app.post("/test-email")
-    async def test_email():
-        
-        test_email = "tu_correo@gmail.com"
-
-        print("📧 ENVIANDO CORREO DE PRUEBA")
-
-        try:
-            await send_user_credentials(
-                test_email,
-                "usuario_prueba",
-                "ABC123"
-            )
-            return {"message": "Correo enviado correctamente"}
-        
-        except Exception as e:
-            print("⚠️ Error enviando correo:", e)
-            return {"error": str(e)}
-
-    # ================================
     # CREAR USUARIO (ADMIN)
     # ================================
     @app.post("/users/", response_model=User)
