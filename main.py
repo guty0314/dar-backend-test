@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 
 from api.user import InitUserRoutes
@@ -13,8 +14,27 @@ async def lifespan(app: FastAPI):
     yield
 
 # Servidor
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
+    )
 
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return """""
+    <html>
+        <head>
+            <title>DAR - Ministerio de Seguridad</title>
+        </head>
+        <body style="font-family: Arial; text-align:center; margin-top:50px;">
+            <h1>API DAR</h1>
+            <p>Ministerio de Seguridad - Gobierno de Jujuy</p>
+            <p>Servicio activo</p>
+        </body>
+    </html>       
+    """
 # --- Inicialización ---
 def init_db():
     """Inicializa la base de datos MariaDB."""
