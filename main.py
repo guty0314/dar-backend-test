@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 
 from api.user import InitUserRoutes
@@ -23,7 +24,7 @@ app = FastAPI(
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    return """""
+    return """
     <html>
         <head>
             <title>DAR - Ministerio de Seguridad</title>
@@ -35,6 +36,27 @@ def home():
         </body>
     </html>       
     """
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request,exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        return HTMLResponse(
+            """
+            <html>
+                <head>
+                    <title>Página no encontrada</title>
+                </head>
+                <body style="font-family: Arial; text-align:center; margin-top:80px;">
+                    <h1>404</h1>
+                    <h2>Página no encontrada</h2>
+                    <p>El recurso solicitado no existe.</p>
+                    <p>Ministerio de Seguridad - Gobierno de Jujuy</p>
+                </body>
+            </html>
+            """,
+            status_code=404
+        )
+    return HTMLResponse(f"<h1>Error {exc.status_code}</h1>", status_code=exc.status_code)
 # --- Inicialización ---
 def init_db():
     """Inicializa la base de datos MariaDB."""
