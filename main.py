@@ -27,12 +27,11 @@ def home():
     return """
     <html>
         <head>
-            <title>DAR - Ministerio de Seguridad</title>
+            <title>Pagina Inexistente</title>
         </head>
         <body style="font-family: Arial; text-align:center; margin-top:50px;">
             <h1>API DAR</h1>
-            <p>Ministerio de Seguridad - Gobierno de Jujuy</p>
-            <p>Servicio activo</p>
+            <p>Pagina Inexistente</p>
         </body>
     </html>       
     """
@@ -47,10 +46,10 @@ async def custom_http_exception_handler(request: Request,exc: StarletteHTTPExcep
                     <title>Página no encontrada</title>
                 </head>
                 <body style="font-family: Arial; text-align:center; margin-top:80px;">
-                    <h1>404</h1>
+                    <h1>Error 404</h1>
                     <h2>Página no encontrada</h2>
                     <p>El recurso solicitado no existe.</p>
-                    <p>Ministerio de Seguridad - Gobierno de Jujuy</p>
+                    <p>Pagina Inexistente</p>
                 </body>
             </html>
             """,
