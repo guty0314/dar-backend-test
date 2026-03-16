@@ -15,12 +15,16 @@ async def lifespan(app: FastAPI):
     yield
 
 # Servidor
-app = FastAPI(
+"""app = FastAPI(
     lifespan=lifespan,
-    #docs_url=None,
+    docs_url=None,
     redoc_url=None,
     openapi_url=None
-    )
+    )"""
+
+app = FastAPI(
+    lifespan=lifespan
+)
 
 @app.get("/", response_class=HTMLResponse)
 def home():
