@@ -27,11 +27,16 @@ class Emergency(SQLModel, table=True):
     __tablename__ = "emergency"
     
     id_emergency: int | None = Field(default=None, primary_key=True)
+    
     latitude: Decimal = Field(sa_column=Column(Numeric(10, 7)))
     longitude: Decimal = Field(sa_column=Column(Numeric(10, 7)))
+    
     type_emergency: EmergencyColor
     active: bool = True
     date_created: datetime = Field(default_factory=datetime.now())
+    
+    id_user: int | None = Field(default= None, foreign_key="user.id_user" )
+
     id_first_responder: int | None = Field(default=None, foreign_key="user.id_user")
 
     def get_emergency_users_data(self):

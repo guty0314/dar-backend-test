@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, BackgroundTasks, WebSocket
+from repositories.user_repository import UserRepository
 
 def InitEmergencyRoutes(app: FastAPI):
     from typing import Annotated
@@ -50,20 +51,29 @@ def InitEmergencyRoutes(app: FastAPI):
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
         emergencies = EmergencyRepository.get_all_emergencies()
+        result = []
+        for e in emergencies:
+            responder = None
 
-        return [
-            {
-                "id": e.id_emergency,
-                "latitude": e.latitude,
-                "longitude": e.longitude,
-                "color": e.type_emergency.value,
-                "active": e.active,
-                "date_created": str(e.date_created),
-                "first_responder": e.id_first_responder
-            }
-            for e in emergencies
-        ]
+            if e.id_first_responder:
+                responder = UserRepository.get_user_by_id(e.id_first_responder)
 
+                result.append({
+                    "id":e.id_emergency,
+                    #DATOS DEL PRIMER INTERVINIENTE
+                    "username":e.user.username,
+                    "full_name":e.user.full_name,
+                    #DATOS DE LA EMERGENCIA
+                    "latitude":e.latitude,
+                    "longitude":e.longitude,
+                    "color":e.type_emergency.value,
+                    "active":e.active,
+                    "date_created":str(e.date_created),
+                    #DATOS DEL PRIMER RESPONDIENTE
+                    "responder_username":responder.username if responder else None,
+                    "responder_full_name":responder.full_name if responder else None,
+                })
+        return result   
 
     # -----------------------------
     # WEBSOCKET PRIMER INTERVINIENTE

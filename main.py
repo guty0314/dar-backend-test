@@ -56,6 +56,7 @@ async def custom_http_exception_handler(request: Request,exc: StarletteHTTPExcep
             status_code=404
         )
     return HTMLResponse(f"<h1>Error {exc.status_code}</h1>", status_code=exc.status_code)
+
 # --- Inicialización ---
 def init_db():
     """Inicializa la base de datos MariaDB."""

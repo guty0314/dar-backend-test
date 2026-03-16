@@ -29,7 +29,8 @@ class EmergencyServices:
             type_emergency=emergency_request.emergency_color,
             active=True,
             date_created=datetime.now(),
-            id_first_responder=current_user.id_user
+            id_user=current_user.id_user, #Es quien creo la alerta
+            id_first_responder=None #Es quien respondio primero
             )
         )
 
