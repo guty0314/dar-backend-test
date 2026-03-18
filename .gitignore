@@ -3,3 +3,4 @@
 push-notificaciones-758a9-firebase-adminsdk-fbsvc-388aaffc2e.json
 *.db
 __pycache__/
+firebase-admin.json

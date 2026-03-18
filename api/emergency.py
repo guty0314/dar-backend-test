@@ -42,7 +42,6 @@ def InitEmergencyRoutes(app: FastAPI):
         )
         return result
 
-
     # -----------------------------
     # LISTAR EMERGENCIAS (ADMIN)
     # -----------------------------

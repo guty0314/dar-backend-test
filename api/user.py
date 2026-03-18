@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from typing import Annotated, List
 from services.user import UpdateUserData
 from services.email_service import send_user_credentials
@@ -12,6 +12,9 @@ def InitUserRoutes(app: FastAPI):
         NewUserData
     )
     from repositories.user_repository import UserRepository
+    from services.password_reset import generate_reset_token, consume_reset_token
+    from services.email_service import send_password_reset_token
+    from pwdlib import PasswordHash
 
     # ================================
     # ACTUALIZAR POSICIÓN
@@ -112,3 +115,36 @@ def InitUserRoutes(app: FastAPI):
         current_user: Annotated[User, Depends(get_current_active_user)]
     ):
         return UserServices.logout_user(current_user)
+
+    # ================================
+    # SOLICITAR RESET DE CONTRASEÑA
+    # ================================
+    @app.post("/users/password-reset/request/")
+    async def request_password_reset(username: str):
+        user = UserRepository.get_user_by_username(username)
+        if not user or not user.email:
+            return {"msg": "Si el usuario existe y tiene email, recibirá instrucciones."}
+        token = generate_reset_token(user.username)
+        try:
+            await send_password_reset_token(user.email, user.username, token)
+        except Exception as e:
+            print("Error enviando email de reset:", e)
+        return {"msg": "Si el usuario existe y tiene email, recibirá instrucciones."}
+
+    # ================================
+    # CONFIRMAR RESET DE CONTRASEÑA
+    # ================================
+    @app.post("/users/password-reset/confirm/")
+    async def confirm_password_reset(token: str, new_password: str):
+        username = consume_reset_token(token)
+        if not username:
+            raise HTTPException(status_code=400, detail="Token inválido o expirado")
+        user = UserRepository.get_user_by_username(username)
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        if not new_password or len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
+        password_hash = PasswordHash.recommended()
+        user.hashed_password = password_hash.hash(new_password)
+        UserRepository.update_user(user)
+        return {"msg": "Contraseña actualizada correctamente"}
