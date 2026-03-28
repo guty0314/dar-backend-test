@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from api.user import InitUserRoutes
 from api.login import InitLogInRoutes
 from api.emergency import InitEmergencyRoutes
+from api.emergency_extra import InitEmergencyExtraRoutes
 
 # Esto se ejecuta cuando el servidor inicia.
 # Solo carga los datos de los usuarios al sistema
@@ -21,43 +22,34 @@ async def lifespan(app: FastAPI):
     redoc_url=None,
     openapi_url=None
     )"""
-
 app = FastAPI(lifespan=lifespan)
 
 @app.get("/", response_class=HTMLResponse)
 def home():
     return """
     <html>
-        <head>
-            <title>Pagina Inexistente</title>
-        </head>
+        <head><title>404</title></head>
         <body style="font-family: Arial; text-align:center; margin-top:50px;">
-            <h1>API DAR</h1>
-            <p>Pagina Inexistente</p>
+            <h1>Error 404</h1>
+            <p>Página inexistente</p>
         </body>
     </html>       
     """
 
 @app.exception_handler(StarletteHTTPException)
-async def custom_http_exception_handler(request: Request,exc: StarletteHTTPException):
-    if exc.status_code == 404:
-        return HTMLResponse(
-            """
-            <html>
-                <head>
-                    <title>Página no encontrada</title>
-                </head>
-                <body style="font-family: Arial; text-align:center; margin-top:80px;">
-                    <h1>Error 404</h1>
-                    <h2>Página no encontrada</h2>
-                    <p>El recurso solicitado no existe.</p>
-                    <p>Pagina Inexistente</p>
-                </body>
-            </html>
-            """,
-            status_code=404
-        )
-    return HTMLResponse(f"<h1>Error {exc.status_code}</h1>", status_code=exc.status_code)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return HTMLResponse(
+        """
+        <html>
+            <head><title>404</title></head>
+            <body style="font-family: Arial; text-align:center; margin-top:80px;">
+                <h1>Error 404</h1>
+                <p>Página inexistente</p>
+            </body>
+        </html>
+        """,
+        status_code=exc.status_code
+    )
 
 # --- Inicialización ---
 def init_db():
@@ -170,3 +162,4 @@ def init_db():
 InitLogInRoutes(app)
 InitUserRoutes(app)
 InitEmergencyRoutes(app)
+InitEmergencyExtraRoutes(app)

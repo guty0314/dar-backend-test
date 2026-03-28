@@ -1,5 +1,8 @@
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 conf = ConnectionConfig(
     MAIL_USERNAME=os.getenv("MAIL_USERNAME"),

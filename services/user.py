@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 from services.utils import oauth2_scheme
 from repositories.user_repository import UserRepository
@@ -9,10 +9,9 @@ from models.user import User
 from services.email_service import send_user_credentials
 
 print("🔥 SERVICES.USER CARGADO 🔥")
+
+
 class NewUserData(BaseModel):
-    """
-    Información necesaria para crear un nuevo usuario.
-    """
     username: str
     full_name: str
     password: str
@@ -21,12 +20,14 @@ class NewUserData(BaseModel):
     cuil: str | None = None
     role: str = "agent"
 
+
 class UpdateUserData(BaseModel):
     full_name: str | None = None
     email: str | None = None
     number_phone: str | None = None
     role: str | None = None
     disabled: bool | None = None
+
 
 class UserServices:
 
@@ -43,7 +44,10 @@ class UserServices:
     def update_my_position(latitude: float, longitude: float, user: User):
         user.latitude = latitude
         user.longitude = longitude
-        user.last_position_update = datetime.now()
+
+        # ✅ FIX CLAVE
+        user.last_position_update = datetime.now(timezone.utc)
+
         UserRepository.update_user(user)
 
         return {
@@ -68,20 +72,12 @@ class UserServices:
 
     @staticmethod
     async def create_user(user: NewUserData, current_user: User) -> User:
-
-        # 🔐 Solo admins pueden crear usuarios
         if current_user.role != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Admin privileges required"
-            )
-
+            raise HTTPException(status_code=403, detail="Admin privileges required")
         if not user.username:
             raise HTTPException(status_code=400, detail="Username cannot be empty")
-
         if not user.password:
             raise HTTPException(status_code=400, detail="Password cannot be empty")
-
         if not user.full_name:
             raise HTTPException(status_code=400, detail="Full name cannot be empty")
 
@@ -103,10 +99,9 @@ class UserServices:
             role=user.role,
             online=False
         )
-        # Se guarda el usuario
+
         created_user = UserRepository.create_user(new_user)
 
-        #Se envia la credenciales por correo electronico
         if created_user.email:
             print("📧 INTENTANDO ENVIAR MAIL A:", created_user.email)
             try:
@@ -117,6 +112,7 @@ class UserServices:
                 )
             except Exception as e:
                 print("Error enviando correo:", e)
+
         return created_user
 
     @staticmethod
@@ -126,9 +122,7 @@ class UserServices:
         return {"msg": "User logged out successfully"}
 
 
-# 🔐 Obtener usuario desde JWT
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-
     import jwt
     from jwt.exceptions import InvalidTokenError
     from services.utils import SECRET_KEY, ALGORITHM
@@ -143,10 +137,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         role = payload.get("role")
-
         if username is None:
             raise credentials_exception
-
     except InvalidTokenError:
         raise credentials_exception
 
@@ -154,7 +146,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
 
-    # Sincronizar rol desde el token
     if role:
         user.role = role
 
@@ -169,7 +160,6 @@ async def get_current_active_user(
     return current_user
 
 
-# 🔐 Dependencia exclusiva para admins
 async def admin_required(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):

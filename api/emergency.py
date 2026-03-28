@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI, BackgroundTasks, WebSocket
 from repositories.user_repository import UserRepository
 
+
 def InitEmergencyRoutes(app: FastAPI):
     from typing import Annotated
 
@@ -20,12 +21,11 @@ def InitEmergencyRoutes(app: FastAPI):
         current_user: Annotated[User, Depends(get_current_active_user)],
         background_tasks: BackgroundTasks,
     ):
-        result = await EmergencyServices.send_emergency(
+        return await EmergencyServices.send_emergency(
             emergency_request,
             current_user,
             background_tasks
         )
-        return result
 
 
     # -----------------------------
@@ -36,11 +36,39 @@ def InitEmergencyRoutes(app: FastAPI):
         emergency_id: int,
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
-        result = await EmergencyServices.cancel_emergency(
+        return await EmergencyServices.cancel_emergency(
             emergency_id,
             current_user
         )
-        return result
+
+
+    # -----------------------------
+    # ACEPTAR EMERGENCIA
+    # -----------------------------
+    @app.post("/emergencies/{emergency_id}/accept/")
+    async def accept_emergency(
+        emergency_id: int,
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        return await EmergencyServices.accept_emergency(
+            emergency_id,
+            current_user
+        )
+
+
+    # -----------------------------
+    # MARCAR LLEGADA 🔥 NUEVO
+    # -----------------------------
+    @app.post("/emergencies/{emergency_id}/arrive/")
+    async def arrive_emergency(
+        emergency_id: int,
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        return await EmergencyServices.arrive_emergency(
+            emergency_id,
+            current_user
+        )
+
 
     # -----------------------------
     # LISTAR EMERGENCIAS (ADMIN)
@@ -51,26 +79,39 @@ def InitEmergencyRoutes(app: FastAPI):
     ):
         emergencies = EmergencyRepository.get_all_emergencies()
         result = []
+
         for e in emergencies:
             user = None
             if e.id_user:
                 user = UserRepository.get_user_by_id(e.id_user)
-            responder = None
-            if e.id_first_responder:
-                responder = UserRepository.get_user_by_id(e.id_first_responder)
+
+            # 🔥 NUEVO: respuestas
+            responses = EmergencyRepository.get_responses_by_emergency(e.id_emergency)
+
+            accepted_count = len([r for r in responses if r.accepted])
+            arrived_count = len([r for r in responses if r.arrived])
+
             result.append({
                 "id": e.id_emergency,
                 "username": user.username if user else None,
                 "full_name": user.full_name if user else None,
                 "latitude": e.latitude,
                 "longitude": e.longitude,
-                "color": e.type_emergency.value,
+
+                # 🔥 reemplaza color
+                "id_type": e.id_type,
+
                 "active": e.active,
                 "date_created": str(e.date_created),
-                "responder_username": responder.username if responder else None,
-                "responder_fullname": responder.full_name if responder else None,
+
+                # 🔥 nuevos campos
+                "accepted_count": accepted_count,
+                "arrived_count": arrived_count,
             })
+
         return result
+
+
     # -----------------------------
     # WEBSOCKET PRIMER INTERVINIENTE
     # -----------------------------

@@ -32,3 +32,37 @@ class EmergencyRepository:
             session.commit()
             session.refresh(emergency)
             return emergency
+
+    @staticmethod
+    def set_first_responder(emergency_id: int, user_id: int) -> Emergency | None:
+        with Session(engine) as session:
+            emergency = session.get(Emergency, emergency_id)
+            if emergency is None or not emergency.active:
+                return None
+            if emergency.id_first_responder is None:
+                emergency.id_first_responder = user_id
+                session.add(emergency)
+                session.commit()
+                session.refresh(emergency)
+            return emergency
+        
+    @staticmethod
+    def get_all_types():
+        from sqlmodel import Session, select
+        from db.session import engine
+        from models.emergency_type import EmergencyType
+
+        with Session(engine) as session:
+            return session.exec(select(EmergencyType)).all()
+        
+    @staticmethod
+    def get_responses_by_emergency(id_emergency: int):
+        from sqlmodel import Session, select
+        from db.session import engine
+        from models.emergency_response import EmergencyResponse
+
+        with Session(engine) as session:
+            return session.exec(
+                select(EmergencyResponse)
+                .where(EmergencyResponse.id_emergency == id_emergency)
+            ).all()
