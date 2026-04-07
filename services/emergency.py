@@ -21,7 +21,7 @@ class EmergencyServices:
         from services.notifications import send_push_notifications
         from repositories.user_repository import UserRepository
 
-        # 🔥 NUEVO: id_type en lugar de color
+        # id_type en lugar de color
         emergency_record = EmergencyRepository.create_emergency(
             Emergency(
                 latitude=emergency_request.latitude,
@@ -42,7 +42,9 @@ class EmergencyServices:
             for u in users_list:
                 if not u.online or not u.device_token:
                     continue
-
+                #Evitar usuarios sin ubicacion
+                if u.latitude is None or u.longitude is None:
+                    continue
                 zone = emergency_ring.contains(u.latitude, u.longitude)
                 if zone == 0:
                     continue
@@ -96,7 +98,7 @@ class EmergencyServices:
         if not emergency.active:
             return {"message": "La emergencia ya está cancelada."}
 
-        # 🔥 solo el creador cancela
+        # solo el creador cancela
         if emergency.id_user != current_user.id_user:
             return {"message": "No tienes permiso para cancelar esta emergencia."}
 
@@ -125,6 +127,13 @@ class EmergencyServices:
                 )
             ).first()
 
+            # evitar doble aceptación
+            if response and response.accepted:
+                return {
+                    "ok": False,
+                    "message": "Ya aceptaste esta emergencia"
+                }
+
             if response:
                 response.accepted = True
                 response.status = "accepted"
@@ -149,12 +158,37 @@ class EmergencyServices:
     # MARCAR LLEGADA
     # -----------------------------
     @staticmethod
-    async def arrive_emergency(
-        emergency_id: int,
-        current_user: User,
-    ):
+    async def arrive_emergency(emergency_id: int, current_user: User):
         from sqlmodel import Session, select
         from db.session import engine
+        from repositories.emergency_repository import EmergencyRepository
+
+        emergency = EmergencyRepository.get_emergency_by_id(emergency_id)
+
+        if not emergency:
+            return {"ok": False, "message": "Emergencia no encontrada"}
+
+        if not emergency.active:
+            return {"ok": False, "message": "La emergencia ya no está activa"}
+
+        if current_user.latitude is None or current_user.longitude is None:
+            return {"ok": False, "message": "No se pudo obtener tu ubicación"}
+
+        ring = emergency.generate_emergency_ring()
+
+        distance = ring.calculate_distance(
+            float(current_user.latitude),
+            float(current_user.longitude)
+        )
+
+        MAX_DISTANCE_METERS = 50
+
+        if distance > MAX_DISTANCE_METERS:
+            return {
+                "ok": False,
+                "message": f"Estás demasiado lejos ({int(distance)}m).",
+                "distance_meters": int(distance)
+            }
 
         with Session(engine) as session:
             response = session.exec(
@@ -165,19 +199,85 @@ class EmergencyServices:
             ).first()
 
             if not response:
-                return {"ok": False, "message": "Primero debe aceptar la emergencia"}
+                return {"ok": False, "message": "Primero debés aceptar"}
+
+            if not response.accepted:
+                return {"ok": False, "message": "Debés aceptar primero"}
+
+            if response.arrived:
+                return {"ok": False, "message": "Ya marcaste llegada"}
 
             response.arrived = True
-            response.accepted = True
             response.status = "arrived"
+            response.arrival_time = datetime.now(timezone.utc)
 
             session.commit()
 
         return {
             "ok": True,
-            "message": "Llegada registrada correctamente",
+            "message": f"Llegada confirmada a {int(distance)}m",
+            "distance_meters": int(distance)
         }
+    # -----------------------------
+    # USUARIOS CERCANOS
+    # -----------------------------
+    @staticmethod
+    async def get_nearby_users(current_user: User):
+        from repositories.user_repository import UserRepository
 
+        if current_user.latitude is None or current_user.longitude is None:
+            return {"ok": False, "message": "No se pudo obtener tu ubicación"}
+
+        ring = Ring(
+            latitude=float(current_user.latitude),
+            longitude=float(current_user.longitude),
+            inner_radius_m=500,
+            outer_radius_m=1000
+        )
+
+        users_list = UserRepository.get_all_users()
+        result = []
+
+        for u in users_list:
+            if not u.online:
+                continue
+
+            if u.id_user == current_user.id_user:
+                continue
+
+            if u.latitude is None or u.longitude is None:
+                continue
+
+            distance = ring.calculate_distance(
+                float(u.latitude),
+                float(u.longitude)
+            )
+
+            zone = ring.contains(
+                float(u.latitude),
+                float(u.longitude)
+            )
+
+            if zone == 0:
+                continue
+
+            result.append({
+                "id_user": u.id_user,
+                "username": u.username,
+                "full_name": u.full_name,
+                "latitude": float(u.latitude),
+                "longitude": float(u.longitude),
+                "zone": zone,
+                "distance_meters": int(distance)
+            })
+
+        result.sort(key=lambda x: x["distance_meters"])
+
+        return {
+            "ok": True,
+            "count": len(result),
+            "nearby_users": result
+        }
     # -----------------------------
     # WEBSOCKET CONTROL EMERGENCIA
     # -----------------------------
@@ -202,6 +302,10 @@ class EmergencyServices:
             username = payload.get("sub")
 
             current_user = UserRepository.get_user_by_username(username)
+
+            if not current_user:
+                await websocket.close(code=1008, reason="User not found")
+                return
 
         except InvalidTokenError:
             await websocket.close(code=1008, reason="Invalid token")
@@ -253,6 +357,10 @@ class EmergencyServices:
             username = payload.get("sub")
 
             current_user = UserRepository.get_user_by_username(username)
+
+            if not current_user:
+                await websocket.close(code=1008, reason="User not found")
+                return
 
         except InvalidTokenError:
             await websocket.close(code=1008, reason="Invalid token")

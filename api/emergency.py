@@ -57,7 +57,7 @@ def InitEmergencyRoutes(app: FastAPI):
 
 
     # -----------------------------
-    # MARCAR LLEGADA 🔥 NUEVO
+    # MARCAR LLEGADA NUEVO
     # -----------------------------
     @app.post("/emergencies/{emergency_id}/arrive/")
     async def arrive_emergency(
@@ -69,6 +69,14 @@ def InitEmergencyRoutes(app: FastAPI):
             current_user
         )
 
+    # -----------------------------
+    # USUARIOS CERCANOS  NUEVO
+    # -----------------------------
+    @app.get("/users/nearby/")
+    async def get_nearby_users(
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        return await EmergencyServices.get_nearby_users(current_user)
 
     # -----------------------------
     # LISTAR EMERGENCIAS (ADMIN)
@@ -85,7 +93,7 @@ def InitEmergencyRoutes(app: FastAPI):
             if e.id_user:
                 user = UserRepository.get_user_by_id(e.id_user)
 
-            # 🔥 NUEVO: respuestas
+            # NUEVO: respuestas
             responses = EmergencyRepository.get_responses_by_emergency(e.id_emergency)
 
             accepted_count = len([r for r in responses if r.accepted])
@@ -98,13 +106,13 @@ def InitEmergencyRoutes(app: FastAPI):
                 "latitude": e.latitude,
                 "longitude": e.longitude,
 
-                # 🔥 reemplaza color
+                # reemplaza color
                 "id_type": e.id_type,
 
                 "active": e.active,
                 "date_created": str(e.date_created),
 
-                # 🔥 nuevos campos
+                # nuevos campos
                 "accepted_count": accepted_count,
                 "arrived_count": arrived_count,
             })

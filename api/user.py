@@ -142,8 +142,8 @@ def InitUserRoutes(app: FastAPI):
         user = UserRepository.get_user_by_username(username)
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        if not new_password or len(new_password) < 6:
-            raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
+        if not new_password or len(new_password) < 8:
+            raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres")
         password_hash = PasswordHash.recommended()
         user.hashed_password = password_hash.hash(new_password)
         UserRepository.update_user(user)
