@@ -87,50 +87,41 @@ def InitEmergencyRoutes(app: FastAPI):
     ):
         try:
             emergencies = EmergencyRepository.get_all_emergencies()
+            types = {t.id_type: t for t in EmergencyRepository.get_all_types()}
+            categories = {c.id_category: c for c in EmergencyRepository.get_all_categories()}
 
             result = []
-
             for e in emergencies:
                 try:
-                    # 🔹 usuario
-                    user = None
-                    if e.id_user:
-                        user = UserRepository.get_user_by_id(e.id_user)
-
-                    # 🔹 tipo seguro
-                    type_obj = EmergencyRepository.get_type_by_id(e.id_type)
+                    user = UserRepository.get_user_by_id(e.id_user) if e.id_user else None
+                    type_obj = types.get(e.id_type)
 
                     if not type_obj:
                         print(f"⚠️ Tipo inexistente: {e.id_type}")
                         continue
 
-                    # 🔹 categoría segura
-                    category = EmergencyRepository.get_category_by_id(type_obj.id_category)
+                    category = categories.get(type_obj.id_category)
 
                     result.append({
                         "id": e.id_emergency,
                         "username": user.username if user else None,
                         "full_name": user.full_name if user else None,
-
                         "latitude": float(e.latitude) if e.latitude is not None else None,
                         "longitude": float(e.longitude) if e.longitude is not None else None,
-
                         "id_type": e.id_type,
                         "type_name": type_obj.name,
-
                         "category": category.name if category else None,
                         "color": category.color if category else None,
-
                         "id_user": e.id_user,
                         "active": e.active,
-                        "date_created": str(e.date_created) if e.date_created is not None else None,
+                        "date_created": str(e.date_created) if e.date_created else None,
                     })
 
                 except Exception as inner_e:
                     import traceback
                     print(f"❌ Error procesando emergencia {e.id_emergency}: {inner_e}")
                     traceback.print_exc()
-                    continue  # sigue con la siguiente en vez de romper todo
+                    continue
 
             return result
 

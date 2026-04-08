@@ -66,3 +66,9 @@ class EmergencyRepository:
                 select(EmergencyResponse)
                 .where(EmergencyResponse.id_emergency == id_emergency)
             ).all()
+        
+    @staticmethod
+    def get_all_categories():
+        from models.emergency_category import EmergencyCategory
+        with Session(engine) as session:
+            return session.exec(select(EmergencyCategory)).all()
