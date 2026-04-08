@@ -376,8 +376,12 @@ class EmergencyServices:
 
                 if emergency:
                     now = datetime.now(timezone.utc)
+                    emergency_time = emergency.date_created
 
-                    if now - emergency.date_created > timedelta(minutes=10):
+                    if emergency_time.tzinfo is None:
+                        emergency_time = emergency_time.replace(tzinfo=timezone.utc)
+
+                    if now - emergency_time > timedelta(minutes=10):
                         emergency.disable_emergency()
                         await websocket.send_json({})
                         await asyncio.sleep(3)
