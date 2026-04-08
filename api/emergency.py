@@ -90,18 +90,20 @@ def InitEmergencyRoutes(app: FastAPI):
         result = []
 
         for e in emergencies:
-            # usuario
+            # 🔹 usuario
             user = None
             if e.id_user:
                 user = UserRepository.get_user_by_id(e.id_user)
 
-            # tipo
+            # 🔹 tipo seguro
             type_obj = EmergencyRepository.get_type_by_id(e.id_type)
 
-            # categoría
-            category = None
-            if type_obj:
-                category = EmergencyRepository.get_category_by_id(type_obj.id_category)
+            if not type_obj:
+                print(f"⚠️ Tipo inexistente: {e.id_type}")
+                continue  # 🔥 evita romper todo
+
+            # 🔹 categoría segura
+            category = EmergencyRepository.get_category_by_id(type_obj.id_category)
 
             result.append({
                 "id": e.id_emergency,
@@ -112,10 +114,10 @@ def InitEmergencyRoutes(app: FastAPI):
                 "longitude": float(e.longitude),
 
                 "id_type": e.id_type,
-                "type_name": type_obj.name if type_obj else None,
+                "type_name": type_obj.name,
 
                 "category": category.name if category else None,
-                "color": category.color if category else None,  # 🔥 CLAVE
+                "color": category.color if category else None,
 
                 "id_user": e.id_user,
                 "active": e.active,
