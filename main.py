@@ -53,10 +53,16 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
 
 # --- Inicialización ---
 def init_db():
-    """Inicializa la base de datos MariaDB."""
+    """Inicializa la base de datos."""
     from sqlmodel import SQLModel, Session
     from db.session import engine
+
+    # IMPORTAR TODOS LOS MODELOS
     from models.user import User
+    from models.emergency import Emergency
+    from models.emergency_type import EmergencyType
+    from models.emergency_category import EmergencyCategory
+    from models.emergency_response import EmergencyResponse
     
     print("📊 Creando tablas en MariaDB...")
     SQLModel.metadata.create_all(engine)
