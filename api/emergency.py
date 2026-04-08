@@ -29,6 +29,40 @@ def InitEmergencyRoutes(app: FastAPI):
 
 
     # -----------------------------
+    # TIPOS POR CATEGORÍA
+    # -----------------------------
+    @app.get("/emergencies/types-by-category/")
+    async def get_types_by_category(
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        types = EmergencyRepository.get_all_types()
+        categories = {c.id_category: c for c in EmergencyRepository.get_all_categories()}
+
+        result = []
+        seen = {}
+
+        for t in types:
+            cat = categories.get(t.id_category)
+            if not cat:
+                continue
+
+            if t.id_category not in seen:
+                seen[t.id_category] = len(result)
+                result.append({
+                    "id_category": cat.id_category,
+                    "category_name": cat.name,
+                    "color": cat.color,
+                    "types": []
+                })
+
+            result[seen[t.id_category]]["types"].append({
+                "id_type": t.id_type,
+                "type_name": t.name,
+            })
+
+        return result
+
+    # -----------------------------
     # CANCELAR EMERGENCIA
     # -----------------------------
     @app.post("/emergencies/{emergency_id}/cancel/")
