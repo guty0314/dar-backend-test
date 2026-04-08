@@ -93,7 +93,6 @@ def InitEmergencyRoutes(app: FastAPI):
             if e.id_user:
                 user = UserRepository.get_user_by_id(e.id_user)
 
-            # NUEVO: respuestas
             responses = EmergencyRepository.get_responses_by_emergency(e.id_emergency)
 
             accepted_count = len([r for r in responses if r.accepted])
@@ -103,16 +102,14 @@ def InitEmergencyRoutes(app: FastAPI):
                 "id": e.id_emergency,
                 "username": user.username if user else None,
                 "full_name": user.full_name if user else None,
-                "latitude": e.latitude,
-                "longitude": e.longitude,
 
-                # reemplaza color
+                # 🔥 FIX ACÁ
+                "latitude": float(e.latitude),
+                "longitude": float(e.longitude),
+
                 "id_type": e.id_type,
-
                 "active": e.active,
                 "date_created": str(e.date_created),
-
-                # nuevos campos
                 "accepted_count": accepted_count,
                 "arrived_count": arrived_count,
             })
