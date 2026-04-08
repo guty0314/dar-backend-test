@@ -86,35 +86,8 @@ def InitEmergencyRoutes(app: FastAPI):
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
         emergencies = EmergencyRepository.get_all_emergencies()
-        result = []
 
-        for e in emergencies:
-            user = None
-            if e.id_user:
-                user = UserRepository.get_user_by_id(e.id_user)
-
-            responses = EmergencyRepository.get_responses_by_emergency(e.id_emergency)
-
-            accepted_count = len([r for r in responses if r.accepted])
-            arrived_count = len([r for r in responses if r.arrived])
-
-            result.append({
-                "id": e.id_emergency,
-                "username": user.username if user else None,
-                "full_name": user.full_name if user else None,
-
-                # 🔥 FIX ACÁ
-                "latitude": float(e.latitude),
-                "longitude": float(e.longitude),
-
-                "id_type": e.id_type,
-                "active": e.active,
-                "date_created": str(e.date_created),
-                "accepted_count": accepted_count,
-                "arrived_count": arrived_count,
-            })
-
-        return result
+        return [{"id": e.id_emergency} for e in emergencies]
 
 
     # -----------------------------
