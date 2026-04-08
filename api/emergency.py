@@ -87,19 +87,42 @@ def InitEmergencyRoutes(app: FastAPI):
     ):
         emergencies = EmergencyRepository.get_all_emergencies()
 
-        return [
-            {
+        result = []
+
+        for e in emergencies:
+            # usuario
+            user = None
+            if e.id_user:
+                user = UserRepository.get_user_by_id(e.id_user)
+
+            # tipo
+            type_obj = EmergencyRepository.get_type_by_id(e.id_type)
+
+            # categoría
+            category = None
+            if type_obj:
+                category = EmergencyRepository.get_category_by_id(type_obj.id_category)
+
+            result.append({
                 "id": e.id_emergency,
+                "username": user.username if user else None,
+                "full_name": user.full_name if user else None,
+
                 "latitude": float(e.latitude),
                 "longitude": float(e.longitude),
+
                 "id_type": e.id_type,
+                "type_name": type_obj.name if type_obj else None,
+
+                "category": category.name if category else None,
+                "color": category.color if category else None,  # 🔥 CLAVE
+
                 "id_user": e.id_user,
                 "active": e.active,
                 "date_created": str(e.date_created),
-            }
-            for e in emergencies
-        ]
+            })
 
+        return result
     # -----------------------------
     # WEBSOCKET PRIMER INTERVINIENTE
     # -----------------------------

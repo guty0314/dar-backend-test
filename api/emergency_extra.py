@@ -13,11 +13,14 @@ def InitEmergencyExtraRoutes(app: FastAPI):
 
         result = []
         for t in types:
+            category = EmergencyRepository.get_category_by_id(t.id_category)
+
             result.append({
                 "id_type": t.id_type,
                 "name": t.name,
                 "priority": t.priority,
-                "id_category": t.id_category
+                "category": category.name if category else None,
+                "color": category.color if category else None,
             })
 
         return result
@@ -65,16 +68,23 @@ def InitEmergencyExtraRoutes(app: FastAPI):
 
         accepted_count = len([r for r in responses if r.accepted])
         arrived_count = len([r for r in responses if r.arrived])
+        type_obj = EmergencyRepository.get_type_by_id(emergency.id_type)
+        category = EmergencyRepository.get_category_by_id(type_obj.id_category) if type_obj else None
 
         return {
             "id_emergency": emergency.id_emergency,
-            "latitude": emergency.latitude,
-            "longitude": emergency.longitude,
-            "id_type": emergency.id_type,
-            "active": emergency.active,
-            "date_created": emergency.date_created,
+            "latitude": float(emergency.latitude),
+            "longitude": float(emergency.longitude),
 
-            # la cantidad de los que aceptaron y cantidad de los que realmente fueron
+            "id_type": emergency.id_type,
+            "type_name": type_obj.name if type_obj else None,
+
+            "category": category.name if category else None,
+            "color": category.color if category else None,
+
+            "active": emergency.active,
+            "date_created": str(emergency.date_created),
+
             "accepted_count": accepted_count,
             "arrived_count": arrived_count,
         }
