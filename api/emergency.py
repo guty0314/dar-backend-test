@@ -85,46 +85,59 @@ def InitEmergencyRoutes(app: FastAPI):
     async def list_emergencies(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
-        emergencies = EmergencyRepository.get_all_emergencies()
+        try:
+            emergencies = EmergencyRepository.get_all_emergencies()
 
-        result = []
+            result = []
 
-        for e in emergencies:
-            # 🔹 usuario
-            user = None
-            if e.id_user:
-                user = UserRepository.get_user_by_id(e.id_user)
+            for e in emergencies:
+                try:
+                    # 🔹 usuario
+                    user = None
+                    if e.id_user:
+                        user = UserRepository.get_user_by_id(e.id_user)
 
-            # 🔹 tipo seguro
-            type_obj = EmergencyRepository.get_type_by_id(e.id_type)
+                    # 🔹 tipo seguro
+                    type_obj = EmergencyRepository.get_type_by_id(e.id_type)
 
-            if not type_obj:
-                print(f"⚠️ Tipo inexistente: {e.id_type}")
-                continue  # 🔥 evita romper todo
+                    if not type_obj:
+                        print(f"⚠️ Tipo inexistente: {e.id_type}")
+                        continue
 
-            # 🔹 categoría segura
-            category = EmergencyRepository.get_category_by_id(type_obj.id_category)
+                    # 🔹 categoría segura
+                    category = EmergencyRepository.get_category_by_id(type_obj.id_category)
 
-            result.append({
-                "id": e.id_emergency,
-                "username": user.username if user else None,
-                "full_name": user.full_name if user else None,
+                    result.append({
+                        "id": e.id_emergency,
+                        "username": user.username if user else None,
+                        "full_name": user.full_name if user else None,
 
-                "latitude": float(e.latitude),
-                "longitude": float(e.longitude),
+                        "latitude": float(e.latitude) if e.latitude is not None else None,
+                        "longitude": float(e.longitude) if e.longitude is not None else None,
 
-                "id_type": e.id_type,
-                "type_name": type_obj.name,
+                        "id_type": e.id_type,
+                        "type_name": type_obj.name,
 
-                "category": category.name if category else None,
-                "color": category.color if category else None,
+                        "category": category.name if category else None,
+                        "color": category.color if category else None,
 
-                "id_user": e.id_user,
-                "active": e.active,
-                "date_created": str(e.date_created),
-            })
+                        "id_user": e.id_user,
+                        "active": e.active,
+                        "date_created": str(e.date_created) if e.date_created is not None else None,
+                    })
 
-        return result
+                except Exception as inner_e:
+                    import traceback
+                    print(f"❌ Error procesando emergencia {e.id_emergency}: {inner_e}")
+                    traceback.print_exc()
+                    continue  # sigue con la siguiente en vez de romper todo
+
+            return result
+
+        except Exception as outer_e:
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(outer_e))
     # -----------------------------
     # WEBSOCKET PRIMER INTERVINIENTE
     # -----------------------------
