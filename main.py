@@ -167,5 +167,5 @@ def init_db():
 # estas funciones generales para poder separarlas mejor.
 InitLogInRoutes(app)
 InitUserRoutes(app)
-InitEmergencyRoutes(app)
 InitEmergencyExtraRoutes(app)
+InitEmergencyRoutes(app)
