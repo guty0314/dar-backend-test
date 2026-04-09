@@ -72,3 +72,15 @@ class EmergencyRepository:
         from models.emergency_category import EmergencyCategory
         with Session(engine) as session:
             return session.exec(select(EmergencyCategory)).all()
+        
+    @staticmethod
+    def get_type_by_id(id_type: int):
+        from models.emergency_type import EmergencyType
+        with Session(engine) as session:
+            return session.get(EmergencyType, id_type)
+
+    @staticmethod
+    def get_category_by_id(id_category: int):
+        from models.emergency_category import EmergencyCategory
+        with Session(engine) as session:
+            return session.get(EmergencyCategory, id_category)
