@@ -118,7 +118,15 @@ class EmergencyServices:
     ):
         from sqlmodel import Session, select
         from db.session import engine
+        from repositories.emergency_repository import EmergencyRepository
 
+        #Aesegura de quien reporto la emergencia no pueda aceptarla 
+        Emergency = EmergencyRepository.get_emergency_by_id(emergency_id)
+        if Emergency is None:
+            return {"ok": False, "message": "Emergencia no encontrada"}
+        if Emergency.id_user == current_user.id_user:
+            return{"ok": False, "message": "No podes aceptar tu propia emergencia"}
+        
         with Session(engine) as session:
             response = session.exec(
                 select(EmergencyResponse).where(
