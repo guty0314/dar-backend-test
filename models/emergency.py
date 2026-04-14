@@ -49,7 +49,7 @@ class Emergency(SQLModel, table=True):
     )
 
     # -----------------------------
-    # 🔧 MÉTODOS (ajustados)
+    # MÉTODOS (ajustados)
     # -----------------------------
 
     def get_emergency_users_data(self):
@@ -64,6 +64,19 @@ class Emergency(SQLModel, table=True):
 
             user_lat = u.latitude
             user_lon = u.longitude
+
+            #El que creó la emergencia siempre es zone -1
+            if u.id_user == self.id_user:
+                users_data[u.username] = {
+                    "latitude": float(user_lat),
+                    "longitude": float(user_lon),
+                    "last_position_update": (
+                        u.last_position_update.isoformat()
+                        if u.last_position_update else None
+                    ),
+                    "zone": -1,
+                }
+                continue
 
             zone = self.generate_emergency_ring().contains(user_lat, user_lon)
 
