@@ -34,7 +34,6 @@ def init_mariadb():
                     latitude=-34.6038,
                     longitude=-58.3816,
                     is_admin=True,
-                    online=True
                 ),
                 User(
                     id_user=2, 
@@ -45,7 +44,6 @@ def init_mariadb():
                     latitude=-34.6090,
                     longitude=-58.3720,
                     is_admin=True,
-                    online=True
                 ),
                 User(
                     id_user=3, 
@@ -56,7 +54,6 @@ def init_mariadb():
                     latitude=-34.6010,
                     longitude=-58.3780,
                     is_admin=True,
-                    online=True
                 ),
             ]
             

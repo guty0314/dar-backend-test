@@ -97,7 +97,7 @@ class UserServices:
             cuil=user.cuil,
             hashed_password=hashed_password,
             role=user.role,
-            online=False
+            last_position_update= None
         )
 
         created_user = UserRepository.create_user(new_user)
@@ -117,7 +117,7 @@ class UserServices:
 
     @staticmethod
     def logout_user(user: User):
-        user.online = False
+        user.last_position_update = None
         UserRepository.update_user(user)
         return {"msg": "User logged out successfully"}
 

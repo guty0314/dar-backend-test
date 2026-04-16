@@ -49,7 +49,7 @@ class Emergency(SQLModel, table=True):
     )
 
     # -----------------------------
-    # MÉTODOS (ajustados)
+    # MÉTODOS
     # -----------------------------
 
     def get_emergency_users_data(self):
@@ -59,7 +59,7 @@ class Emergency(SQLModel, table=True):
         users_list = UserRepository.get_all_users()
 
         for u in users_list:
-            if not u.online:
+            if u.status == "offline":
                 continue
 
             user_lat = u.latitude

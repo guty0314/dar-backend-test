@@ -84,7 +84,6 @@ def init_db():
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
-                    online=True,
                     cuil="12345678"
                     ),
                 User(
@@ -95,7 +94,6 @@ def init_db():
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
-                    online=True,
                     cuil="12345678"
                     ),
                 User(
@@ -106,7 +104,6 @@ def init_db():
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
-                    online=True,
                     cuil="12345678"
                     ),
                 User(
@@ -117,7 +114,6 @@ def init_db():
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
-                    online=True,
                     cuil="12345678"
                     ),
 

@@ -41,7 +41,7 @@ class TokenServices:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        print("🔥 LOGIN EJECUTADO 🔥")
+        print(" LOGIN EJECUTADO ")
         print("Role del usuario:", user.role)
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -55,10 +55,11 @@ class TokenServices:
             expires_delta=access_token_expires
         )
 
-        user.online = True
+        # CONTROLA SI ESTA ONLINE
+        now = datetime.now(timezone.utc)
 
-        # ✅ FIX CLAVE
-        user.last_login = datetime.now(timezone.utc)
+        user.last_login = now
+        user.last_position_update = now  # hace que aparezca online al loguearse
 
         UserRepository.update_user(user)
 

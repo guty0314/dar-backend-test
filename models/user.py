@@ -35,36 +35,31 @@ class User(SQLModel, table=True):
     is_admin: bool = Field(default=0)
     role: str = Field(default="agent", index=True)
 
-    online: bool = Field(default=0)
-
     last_login: datetime | None = Field(default=None)
     last_position_update: datetime | None = Field(default=None)
 
-    cuil: str = Field(index=True)  # 🔥 importante para el otro esquema
+    cuil: str = Field(index=True)
 
     # -----------------------------
     # MÉTODOS
     # -----------------------------
 
     def get_user_position(self):
-        """
-        Obtiene la posicion (latitud, longitud) del usuario.
-        """
         return (self.latitude, self.longitude)
 
     def verify_password(self, plain_password):
-        """
-        Verifica si la contraseña (texto plano) pertenece a esta cuenta.
-        """
         return password_hash.verify(plain_password, self.hashed_password)
 
     def set_lat_lon(self, lat: float, lon: float):
         from sqlmodel import Session
         from db.session import engine
+        from datetime import datetime, timezone
 
         with Session(engine) as session:
             self.latitude = lat
             self.longitude = lon
+            self.last_position_update = datetime.now(timezone.utc)  # 🔥 CLAVE
+
             user = session.merge(self)
             session.add(user)
             session.commit()
@@ -78,3 +73,33 @@ class User(SQLModel, table=True):
             user = session.merge(self)
             session.add(user)
             session.commit()
+
+    # -----------------------------
+    # ESTADO DEL USUARIO
+    # -----------------------------
+
+    @property
+    def status(self) -> str:
+        from datetime import datetime, timezone, timedelta
+
+        if not self.last_position_update:
+            return "offline"
+
+        now = datetime.now(timezone.utc)
+        last = self.last_position_update
+
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+
+        delta = now - last
+
+        if delta < timedelta(minutes=2):
+            return "online"
+        elif delta < timedelta(minutes=10):
+            return "recent"
+        else:
+            return "offline"
+
+    @property
+    def online(self) -> bool:
+        return self.status == "online"

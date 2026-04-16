@@ -40,7 +40,7 @@ class EmergencyServices:
             users_list = UserRepository.get_all_users()
 
             for u in users_list:
-                if not u.online or not u.device_token:
+                if u.status == "offline" or not u.device_token:
                     continue
                 #Evitar usuarios sin ubicacion
                 if u.latitude is None or u.longitude is None:
@@ -247,7 +247,7 @@ class EmergencyServices:
         result = []
 
         for u in users_list:
-            if not u.online:
+            if u.status == "offline":
                 continue
 
             if u.id_user == current_user.id_user:
