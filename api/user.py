@@ -59,11 +59,30 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # LISTAR TODOS LOS USUARIOS (ADMIN)
     # ================================
-    @app.get("/admin/users/", response_model=List[User])
+    @app.get("/admin/users/")
     async def list_all_users(
         current_user: Annotated[User, Depends(admin_required)]
     ):
-        return UserRepository.get_all_users()
+        users = UserRepository.get_all_users()
+
+        return [
+            {
+                "id_user": u.id_user,
+                "username": u.username,
+                "full_name": u.full_name,
+                "email": u.email,
+                "number_phone": u.number_phone,
+                "latitude": float(u.latitude) if u.latitude else None,
+                "longitude": float(u.longitude) if u.longitude else None,
+                "last_login": u.last_login,
+                "last_position_update": u.last_position_update,
+                "status": u.status,
+                "role": u.role,
+                "disabled": u.disabled,
+                "cuil": u.cuil,
+            }
+            for u in users
+        ]
 
     # ================================
     # CAMBIAR ROL (ADMIN)
