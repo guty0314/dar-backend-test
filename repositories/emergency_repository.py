@@ -104,3 +104,19 @@ class EmergencyRepository:
                 .where(EmergencyResponse.id_user == user_id)
                 .order_by(EmergencyResponse.response_date.desc())
             ).all()
+    
+    @staticmethod
+    def get_responses_with_emergency(user_id: int):
+        from models.emergency_response import EmergencyResponse
+        from models.emergency import Emergency
+
+        with Session(engine) as session:
+            return session.exec(
+                select(Emergency, EmergencyResponse)
+                .join(
+                    EmergencyResponse,
+                    EmergencyResponse.id_emergency == Emergency.id_emergency
+                )
+                .where(EmergencyResponse.id_user == user_id)
+                .order_by(EmergencyResponse.response_date.desc())
+            ).all()
