@@ -84,3 +84,23 @@ class EmergencyRepository:
         from models.emergency_category import EmergencyCategory
         with Session(engine) as session:
             return session.get(EmergencyCategory, id_category)
+        
+    @staticmethod
+    def get_emergencies_by_user(user_id: int):
+        with Session(engine) as session:
+            return session.exec(
+                select(Emergency)
+                .where(Emergency.id_user == user_id)
+                .order_by(Emergency.date_created.desc())
+            ).all()
+    
+    @staticmethod
+    def get_responses_by_user(user_id: int):
+        from models.emergency_response import EmergencyResponse
+
+        with Session(engine) as session:
+            return session.exec(
+                select(EmergencyResponse)
+                .where(EmergencyResponse.id_user == user_id)
+                .order_by(EmergencyResponse.response_date.desc())
+            ).all()

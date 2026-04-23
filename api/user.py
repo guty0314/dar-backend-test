@@ -167,3 +167,61 @@ def InitUserRoutes(app: FastAPI):
         user.hashed_password = password_hash.hash(new_password)
         UserRepository.update_user(user)
         return {"msg": "Contraseña actualizada correctamente"}
+    
+    # ================================
+    # VER MI USUARIO
+    # ================================
+    @app.get("/users/me")
+    async def get_me(current_user: User = Depends(get_current_active_user)):
+        return {
+            "id": current_user.id_user,
+            "username": current_user.username,
+            "email": current_user.email,
+            "role": current_user.role,
+        }
+    # ================================
+    # MIS EMERGENCIAS ENVIADAS
+    # ================================
+    @app.get("/users/me/emergencies-sent")
+    async def get_my_emergencies_sent(
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+
+        emergencies = EmergencyRepository.get_emergencies_by_user(current_user.id_user)
+
+        return [
+            {
+                "id": e.id_emergency,
+                "latitude": float(e.latitude),
+                "longitude": float(e.longitude),
+                "created_at": e.date_created.isoformat(),
+                "type_id": e.id_type,
+                "status": "activa" if e.active else "cerrada",
+            }
+            for e in emergencies
+        ]
+    
+    # ================================
+    # MIS EMERGENCIAS RESPONDIDAS
+    # ================================
+    @app.get("/users/me/emergencies-responded")
+    async def get_my_emergencies_responded(
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+
+        results = EmergencyRepository.get_responses_with_emergency(current_user.id_user)
+
+        return [
+            {
+                "id": e.id_emergency,
+                "latitude": float(e.latitude),
+                "longitude": float(e.longitude),
+                "type_id": e.id_type,
+                "status": r.status.value,
+                "accepted_at": r.response_date.isoformat() if r.response_date else None,
+                "arrived_at": r.arrival_time.isoformat() if r.arrival_time else None,
+            }
+            for e, r in results
+        ]
