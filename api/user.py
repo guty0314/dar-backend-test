@@ -240,3 +240,91 @@ def InitUserRoutes(app: FastAPI):
             }
             for e, r in results
         ]
+    
+    # ================================
+    # MIS EMERGENCIAS ESTADISTICAS
+    # ================================
+    @app.get("/users/me/stats")
+    async def get_my_stats(
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+
+        sent = EmergencyRepository.get_emergencies_by_user(current_user.id_user)
+        responses = EmergencyRepository.get_responses_with_emergency(current_user.id_user)
+        types = {t.id_type: t for t in EmergencyRepository.get_all_types()}
+        categories = {c.id_category: c for c in EmergencyRepository.get_all_categories()}
+
+        # Por tipo
+        by_type = {}
+        for e in sent:
+            type_obj = types.get(e.id_type)
+            name = type_obj.name if type_obj else f"Tipo {e.id_type}"
+            by_type[name] = by_type.get(name, 0) + 1
+
+        # Por color
+        by_color = {}
+        for e in sent:
+            type_obj = types.get(e.id_type)
+            cat = categories.get(type_obj.id_category) if type_obj else None
+            color = cat.color if cat else "desconocido"
+            by_color[color] = by_color.get(color, 0) + 1
+
+        # Respondidas
+        total_responded = len(responses)
+        total_arrived = sum(1 for _, r in responses if r.arrived)
+        total_accepted = sum(1 for _, r in responses if r.accepted)
+
+        return {
+            "sent": {
+                "total": len(sent),
+                "by_type": by_type,
+                "by_color": by_color,
+                "active": sum(1 for e in sent if e.active),
+                "closed": sum(1 for e in sent if not e.active),
+            },
+            "responded": {
+                "total": total_responded,
+                "accepted": total_accepted,
+                "arrived": total_arrived,
+            }
+        }
+    # ================================
+    # ESTADISTICAS EMERGENCIAS PARA ADMIN
+    # ================================
+    @app.get("/admin/stats")
+    async def get_admin_stats(
+        current_user: Annotated[User, Depends(admin_required)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+        from repositories.user_repository import UserRepository
+
+        emergencies = EmergencyRepository.get_all_emergencies()
+        types = {t.id_type: t for t in EmergencyRepository.get_all_types()}
+        categories = {c.id_category: c for c in EmergencyRepository.get_all_categories()}
+        users = UserRepository.get_all_users()
+
+        # Por tipo
+        by_type = {}
+        for e in emergencies:
+            type_obj = types.get(e.id_type)
+            name = type_obj.name if type_obj else f"Tipo {e.id_type}"
+            by_type[name] = by_type.get(name, 0) + 1
+
+        # Por color
+        by_color = {}
+        for e in emergencies:
+            type_obj = types.get(e.id_type)
+            cat = categories.get(type_obj.id_category) if type_obj else None
+            color = cat.color if cat else "desconocido"
+            by_color[color] = by_color.get(color, 0) + 1
+
+        return {
+            "total_emergencies": len(emergencies),
+            "active": sum(1 for e in emergencies if e.active),
+            "closed": sum(1 for e in emergencies if not e.active),
+            "by_type": by_type,
+            "by_color": by_color,
+            "total_users": len(users),
+            "online_users": sum(1 for u in users if u.is_session_active()),
+        }
