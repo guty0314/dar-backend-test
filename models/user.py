@@ -74,6 +74,15 @@ class User(SQLModel, table=True):
             session.add(user)
             session.commit()
 
+    def is_session_active(self) -> bool:
+        if self.last_login is None:
+            return False
+        from datetime import datetime, timezone, timedelta
+        now = datetime.now(timezone.utc)
+        last = self.last_login
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        return (now - last) < timedelta(hours=8)
     # -----------------------------
     # ESTADO DEL USUARIO
     # -----------------------------
