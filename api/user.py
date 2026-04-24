@@ -189,19 +189,24 @@ def InitUserRoutes(app: FastAPI):
         from repositories.emergency_repository import EmergencyRepository
 
         emergencies = EmergencyRepository.get_emergencies_by_user(current_user.id_user)
+        types = {t.id_type: t for t in EmergencyRepository.get_all_types()}
+        categories = {c.id_category: c for c in EmergencyRepository.get_all_categories()}
 
         return [
             {
                 "id": e.id_emergency,
                 "latitude": float(e.latitude),
                 "longitude": float(e.longitude),
-                "created_at": e.date_created.isoformat(),
+                "date_created": e.date_created.isoformat(),
                 "type_id": e.id_type,
+                "type_name": types[e.id_type].name if e.id_type in types else None,
+                "color": categories[types[e.id_type].id_category].color
+                    if e.id_type in types and types[e.id_type].id_category in categories else None,
                 "status": "activa" if e.active else "cerrada",
             }
             for e in emergencies
         ]
-    
+
     # ================================
     # MIS EMERGENCIAS RESPONDIDAS
     # ================================
@@ -212,13 +217,19 @@ def InitUserRoutes(app: FastAPI):
         from repositories.emergency_repository import EmergencyRepository
 
         results = EmergencyRepository.get_responses_with_emergency(current_user.id_user)
+        types = {t.id_type: t for t in EmergencyRepository.get_all_types()}
+        categories = {c.id_category: c for c in EmergencyRepository.get_all_categories()}
 
         return [
             {
                 "id": e.id_emergency,
                 "latitude": float(e.latitude),
                 "longitude": float(e.longitude),
+                "date_created": e.date_created.isoformat(),
                 "type_id": e.id_type,
+                "type_name": types[e.id_type].name if e.id_type in types else None,
+                "color": categories[types[e.id_type].id_category].color
+                    if e.id_type in types and types[e.id_type].id_category in categories else None,
                 "status": r.status.value,
                 "accepted_at": r.response_date.isoformat() if r.response_date else None,
                 "arrived_at": r.arrival_time.isoformat() if r.arrival_time else None,
