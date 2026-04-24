@@ -176,8 +176,12 @@ def InitUserRoutes(app: FastAPI):
         return {
             "id": current_user.id_user,
             "username": current_user.username,
+            "full_name": current_user.full_name,
             "email": current_user.email,
+            "number_phone": current_user.number_phone,
+            "cuil": current_user.cuil,
             "role": current_user.role,
+            "last_login": current_user.last_login.isoformat() if current_user.last_login else None,
         }
     # ================================
     # MIS EMERGENCIAS ENVIADAS
