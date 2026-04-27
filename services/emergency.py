@@ -391,7 +391,7 @@ class EmergencyServices:
 
                     if now - emergency_time > timedelta(minutes=10):
                         emergency.disable_emergency()
-                        await websocket.send_json({})
+                        await websocket.send_json({"status": 0})  # ✅ antes mandaba {}
                         await asyncio.sleep(3)
                         continue
 
@@ -407,6 +407,13 @@ class EmergencyServices:
                             "id_type": emergency.id_type,
                             "users_in_ring": emergency.get_emergency_users_data()
                         }
+                    else:
+                        # ✅ está en el ring pero fuera de zona — sin emergencia para él
+                        data = {"status": 0}
+
+                else:
+                    # ✅ no hay emergencia activa — limpia la alerta
+                    data = {"status": 0}
 
                 await websocket.send_json(data)
 
