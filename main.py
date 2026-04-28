@@ -7,9 +7,11 @@ from api.user import InitUserRoutes
 from api.login import InitLogInRoutes
 from api.emergency import InitEmergencyRoutes
 from api.emergency_extra import InitEmergencyExtraRoutes
+from fastapi.middleware.cors import CORSMiddleware
 
 # Esto se ejecuta cuando el servidor inicia.
 # Solo carga los datos de los usuarios al sistema
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
@@ -23,7 +25,16 @@ async def lifespan(app: FastAPI):
     openapi_url=None
     )"""
 app = FastAPI(lifespan=lifespan)
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 @app.get("/", response_class=HTMLResponse)
 def home():
     return """
