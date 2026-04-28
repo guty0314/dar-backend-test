@@ -32,7 +32,14 @@ class EmergencyServices:
                 id_user=current_user.id_user,
             )
         )
-
+        from repositories.activity_log_repository import ActivityLogRepository
+        ActivityLogRepository.log(
+            id_user=current_user.id_user,
+            username=current_user.username,
+            full_name=current_user.full_name,
+            action="emergency_sent",
+            detail=f"Emergencia #{emergency_record.id_emergency} - tipo {emergency_request.id_type}",
+        )
         emergency_ring = emergency_record.generate_emergency_ring()
 
         try:
@@ -103,7 +110,14 @@ class EmergencyServices:
             return {"message": "No tienes permiso para cancelar esta emergencia."}
 
         emergency.disable_emergency()
-
+        from repositories.activity_log_repository import ActivityLogRepository
+        ActivityLogRepository.log(
+            id_user=current_user.id_user,
+            username=current_user.username,
+            full_name=current_user.full_name,
+            action="emergency_cancelled",
+            detail=f"Canceló emergencia #{emergency_id}",
+        )
         return {
             "message": f"Emergencia {emergency_id} cancelada por {current_user.username}."
         }
@@ -156,7 +170,14 @@ class EmergencyServices:
                 session.add(response)
 
             session.commit()
-
+        from repositories.activity_log_repository import ActivityLogRepository
+        ActivityLogRepository.log(
+            id_user=current_user.id_user,
+            username=current_user.username,
+            full_name=current_user.full_name,
+            action="emergency_accepted",
+            detail=f"Aceptó emergencia #{emergency_id}",
+        )    
         return {
             "ok": True,
             "message": f"{current_user.username} aceptó la emergencia {emergency_id}.",
@@ -220,7 +241,14 @@ class EmergencyServices:
             response.arrival_time = datetime.now(timezone.utc)
 
             session.commit()
-
+        from repositories.activity_log_repository import ActivityLogRepository
+        ActivityLogRepository.log(
+            id_user=current_user.id_user,
+            username=current_user.username,
+            full_name=current_user.full_name,
+            action="emergency_arrived",
+            detail=f"Llegó a emergencia #{emergency_id} a {int(distance)}m",
+        )
         return {
             "ok": True,
             "message": f"Llegada confirmada a {int(distance)}m",

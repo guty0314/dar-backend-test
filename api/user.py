@@ -133,6 +133,14 @@ def InitUserRoutes(app: FastAPI):
     async def logout_user(
         current_user: Annotated[User, Depends(get_current_active_user)]
     ):
+        from repositories.activity_log_repository import ActivityLogRepository
+        ActivityLogRepository.log(
+            id_user=current_user.id_user,
+            username=current_user.username,
+            full_name=current_user.full_name,
+            action="logout",
+            detail="Cierre de sesión",
+        )
         return UserServices.logout_user(current_user)
 
     # ================================

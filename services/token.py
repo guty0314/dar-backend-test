@@ -62,5 +62,12 @@ class TokenServices:
         user.last_position_update = now  # hace que aparezca online al loguearse
 
         UserRepository.update_user(user)
-
+        from repositories.activity_log_repository import ActivityLogRepository
+        ActivityLogRepository.log(
+            id_user=user.id_user,
+            username=user.username,
+            full_name=user.full_name,
+            action="login",
+            detail="Inicio de sesión",
+        )
         return Token(access_token=access_token, token_type="bearer")

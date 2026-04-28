@@ -74,6 +74,7 @@ def init_db():
     from models.emergency_type import EmergencyType
     from models.emergency_category import EmergencyCategory
     from models.emergency_response import EmergencyResponse
+    from models.activity_log import ActivityLog
     
     print("📊 Creando tablas en MariaDB...")
     SQLModel.metadata.create_all(engine)
