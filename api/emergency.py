@@ -140,6 +140,7 @@ def InitEmergencyRoutes(app: FastAPI):
                         "id": e.id_emergency,
                         "username": user.username if user else None,
                         "full_name": user.full_name if user else None,
+                        "number_phone": user.number_phone if user else None,
                         "latitude": float(e.latitude) if e.latitude is not None else None,
                         "longitude": float(e.longitude) if e.longitude is not None else None,
                         "id_type": e.id_type,
