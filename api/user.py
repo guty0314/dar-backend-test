@@ -336,3 +336,25 @@ def InitUserRoutes(app: FastAPI):
             "total_users": len(users),
             "online_users": sum(1 for u in users if u.is_session_active()),
         }
+    # ================================
+    # LOGS DE ACTIVIDAD (ADMIN)
+    # ================================
+    @app.get("/admin/activity-logs")
+    async def get_activity_logs(
+        current_user: Annotated[User, Depends(admin_required)],
+        limit: int = 200,
+    ):
+        from repositories.activity_log_repository import ActivityLogRepository
+        logs = ActivityLogRepository.get_all(limit=limit)
+        return [
+            {
+                "id_log": l.id_log,
+                "username": l.username,
+                "full_name": l.full_name,
+                "action": l.action,
+                "detail": l.detail,
+                "timestamp": l.timestamp.isoformat(),
+                "ip_address": l.ip_address,
+            }
+            for l in logs
+        ]
