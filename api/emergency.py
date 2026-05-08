@@ -29,7 +29,7 @@ def InitEmergencyRoutes(app: FastAPI):
 
 
     # -----------------------------
-    # TIPOS POR CATEGORÍA
+    # TIPOS POR CATEGORÍA (ROJO, AMARILLO VIOLETA)
     # -----------------------------
     @app.get("/emergencies/types-by-category/")
     async def get_types_by_category(
@@ -91,7 +91,7 @@ def InitEmergencyRoutes(app: FastAPI):
 
 
     # -----------------------------
-    # MARCAR LLEGADA NUEVO
+    # MARCAR LLEGADA
     # -----------------------------
     @app.post("/emergencies/{emergency_id}/arrive/")
     async def arrive_emergency(
@@ -104,7 +104,7 @@ def InitEmergencyRoutes(app: FastAPI):
         )
 
     # -----------------------------
-    # USUARIOS CERCANOS  NUEVO
+    # USUARIOS CERCANOS
     # -----------------------------
     @app.get("/users/nearby/")
     async def get_nearby_users(

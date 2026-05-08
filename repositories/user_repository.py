@@ -34,11 +34,6 @@ class UserRepository:
     def update_user(user: User) -> User:
         """
         Actualiza la informacion del usuario en la base de datos.
-
-        :param user: Usuario a actualizar.
-        :type user: User
-        :return: Usuario actualizado.
-        :rtype: User
         """
         with Session(engine) as session:
             session.add(user)

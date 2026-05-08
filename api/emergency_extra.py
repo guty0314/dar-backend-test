@@ -3,7 +3,7 @@ from fastapi import FastAPI
 def InitEmergencyExtraRoutes(app: FastAPI):
 
     # -----------------------------
-    # TIPOS DE EMERGENCIA
+    # TIPOS DE EMERGENCIA (ACCIDENTES DE TRANSITO, VIOLENCIA DE GENERO, ROBOS, HURTOS)
     # -----------------------------
     @app.get("/emergency/types")
     def get_emergency_types():
@@ -27,7 +27,7 @@ def InitEmergencyExtraRoutes(app: FastAPI):
 
 
     # -----------------------------
-    # RESPONSES (QUIEN ACEPTÓ / LLEGÓ)
+    # RESPONDIENTES (QUIEN ACEPTO / QUIEN LLEGO REALMENTE)
     # -----------------------------
     @app.get("/emergencies/{emergency_id}/responses")
     def get_emergency_responses(emergency_id: int):

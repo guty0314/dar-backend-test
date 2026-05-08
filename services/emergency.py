@@ -21,7 +21,6 @@ class EmergencyServices:
         from services.notifications import send_push_notifications
         from repositories.user_repository import UserRepository
 
-        # id_type en lugar de color
         emergency_record = EmergencyRepository.create_emergency(
             Emergency(
                 latitude=emergency_request.latitude,
@@ -149,7 +148,7 @@ class EmergencyServices:
                 )
             ).first()
 
-            # evitar doble aceptación
+            # evita doble aceptación
             if response and response.accepted:
                 return {
                     "ok": False,
@@ -419,7 +418,7 @@ class EmergencyServices:
 
                     if now - emergency_time > timedelta(minutes=10):
                         emergency.disable_emergency()
-                        await websocket.send_json({"status": 0})  # ✅ antes mandaba {}
+                        await websocket.send_json({"status": 0})
                         await asyncio.sleep(3)
                         continue
 
@@ -436,11 +435,11 @@ class EmergencyServices:
                             "users_in_ring": emergency.get_emergency_users_data()
                         }
                     else:
-                        # ✅ está en el ring pero fuera de zona — sin emergencia para él
+                        # está en el ring pero fuera de zona — sin emergencia para él
                         data = {"status": 0}
 
                 else:
-                    # ✅ no hay emergencia activa — limpia la alerta
+                    # no hay emergencia activa — limpia la alerta
                     data = {"status": 0}
 
                 await websocket.send_json(data)

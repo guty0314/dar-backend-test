@@ -13,7 +13,7 @@ class User(SQLModel, table=True):
     Clase que aloja la informacion del usuario, que son los policias registrados en el sistema.
     """
     __tablename__ = "user"
-    __table_args__ = {"schema": "public"}  # 🔥 IMPORTANTE
+    __table_args__ = {"schema": "public"}
 
     id_user: int | None = Field(default=None, primary_key=True)
 
@@ -58,7 +58,7 @@ class User(SQLModel, table=True):
         with Session(engine) as session:
             self.latitude = lat
             self.longitude = lon
-            self.last_position_update = datetime.now(timezone.utc)  # 🔥 CLAVE
+            self.last_position_update = datetime.now(timezone.utc)
 
             user = session.merge(self)
             session.add(user)

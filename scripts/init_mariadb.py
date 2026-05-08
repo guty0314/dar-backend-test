@@ -14,9 +14,9 @@ from models.emergency import Emergency
 def init_mariadb():
     """Crea todas las tablas e inserta datos iniciales."""
     
-    print("📊 Creando tablas en MariaDB...")
+    print("Creando tablas en MariaDB...")
     SQLModel.metadata.create_all(engine)
-    print("✅ Tablas creadas exitosamente")
+    print("Tablas creadas exitosamente")
     
     print("\n👥 Insertando usuarios iniciales...")
     with Session(engine) as session:
@@ -65,7 +65,7 @@ def init_mariadb():
         else:
             print(f"⚠️  La base de datos ya contiene {existing_users} usuarios. Saltando inserción.")
     
-    print("\n✨ Inicialización completada")
+    print("\n Inicialización completada")
 
 if __name__ == "__main__":
     init_mariadb()

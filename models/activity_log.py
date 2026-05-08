@@ -12,8 +12,8 @@ class ActivityLog(SQLModel, table=True):
     username: str
     full_name: str | None = None
 
-    action: str  # login, logout, emergency_sent, emergency_accepted, emergency_arrived
-    detail: str | None = None  # info extra, ej: "Emergencia #42 - ROBO"
+    action: str  # login, logout, emergencia reportada, emergencia aceptada, emergencia llegada
+    detail: str | None = None  # informacion extra, ej: "Emergencia #42 - ROBO"
 
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)

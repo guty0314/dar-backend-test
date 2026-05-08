@@ -8,7 +8,7 @@ from repositories.user_repository import UserRepository
 from models.user import User
 from services.email_service import send_user_credentials
 
-print("🔥 SERVICES.USER CARGADO 🔥")
+print(" SERVICES.USER CARGADO ")
 
 
 class NewUserData(BaseModel):
@@ -45,7 +45,7 @@ class UserServices:
         user.latitude = latitude
         user.longitude = longitude
 
-        # ✅ FIX CLAVE
+        # FIX CLAVE
         user.last_position_update = datetime.now(timezone.utc)
 
         UserRepository.update_user(user)
@@ -103,7 +103,7 @@ class UserServices:
         created_user = UserRepository.create_user(new_user)
 
         if created_user.email:
-            print("📧 INTENTANDO ENVIAR MAIL A:", created_user.email)
+            print("INTENTANDO ENVIAR MAIL A:", created_user.email)
             try:
                 await send_user_credentials(
                     created_user.email,

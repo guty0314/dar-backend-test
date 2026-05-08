@@ -6,15 +6,13 @@ from decimal import Decimal
 
 from services.emergencyring import Ring
 
-
-# 🔥 REQUEST ACTUALIZADO
 class EmergencyRequest(BaseModel):
     """
     Modelo para crear una emergencia.
     """
     latitude: float
     longitude: float
-    id_type: int  # 🔥 ahora viene el tipo
+    id_type: int
 
 
 class Emergency(SQLModel, table=True):
@@ -22,14 +20,13 @@ class Emergency(SQLModel, table=True):
     Representa las emergencias en la base de datos.
     """
     __tablename__ = "emergency"
-    __table_args__ = {"schema": "dar"}  # 🔥 clave
+    __table_args__ = {"schema": "dar"}
 
     id_emergency: int | None = Field(default=None, primary_key=True)
     
     latitude: Decimal = Field(sa_column=Column(Numeric(10, 7)))
     longitude: Decimal = Field(sa_column=Column(Numeric(10, 7)))
     
-    # 🔥 FK al tipo de emergencia
     id_type: int = Field(
         foreign_key="dar.emergency_type.id_type",
         index=True
@@ -41,7 +38,6 @@ class Emergency(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
     
-    # 🔥 FK al usuario (schema public)
     id_user: int | None = Field(
         default=None,
         foreign_key="public.user.id_user",
