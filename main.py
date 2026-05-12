@@ -7,6 +7,7 @@ from api.user import InitUserRoutes
 from api.login import InitLogInRoutes
 from api.emergency import InitEmergencyRoutes
 from api.emergency_extra import InitEmergencyExtraRoutes
+from api.chat import InitChatRoutes 
 from fastapi.middleware.cors import CORSMiddleware
 
 # Esto se ejecuta cuando el servidor inicia.
@@ -75,7 +76,8 @@ def init_db():
     from models.emergency_category import EmergencyCategory
     from models.emergency_response import EmergencyResponse
     from models.activity_log import ActivityLog
-    
+    from models.chat_message import ChatMessage
+
     print("📊 Creando tablas en MariaDB...")
     SQLModel.metadata.create_all(engine)
     print("✅ Tablas creadas exitosamente")
@@ -143,3 +145,4 @@ InitLogInRoutes(app)
 InitUserRoutes(app)
 InitEmergencyExtraRoutes(app)
 InitEmergencyRoutes(app)
+InitChatRoutes(app)
