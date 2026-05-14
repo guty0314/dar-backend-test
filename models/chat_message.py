@@ -13,6 +13,7 @@ class ChatMessageBase(SQLModel):
     sender_name: str = Field(nullable=False)
     sender_role: str = Field(nullable=False)
     message: str = Field(nullable=False)
+    image_url: Optional[str] = Field(default=None, nullable=True)
 
 
 class ChatMessage(ChatMessageBase, table=True):

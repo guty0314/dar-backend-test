@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 
@@ -7,25 +9,19 @@ from api.user import InitUserRoutes
 from api.login import InitLogInRoutes
 from api.emergency import InitEmergencyRoutes
 from api.emergency_extra import InitEmergencyExtraRoutes
-from api.chat import InitChatRoutes 
+from api.chat import InitChatRoutes
 from fastapi.middleware.cors import CORSMiddleware
 
-# Esto se ejecuta cuando el servidor inicia.
-# Solo carga los datos de los usuarios al sistema
+# Crear carpeta de imágenes si no existe
+os.makedirs("media/chat", exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
 
-# Servidor
-"""app = FastAPI(
-    lifespan=lifespan,
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None
-    )"""
 app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -36,6 +32,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Servir archivos estáticos (imágenes del chat)
+app.mount("/media", StaticFiles(directory="media"), name="media")
+
 @app.get("/", response_class=HTMLResponse)
 def home():
     return """
@@ -63,13 +63,11 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
         status_code=exc.status_code
     )
 
-# --- Inicialización ---
 def init_db():
     """Inicializa la base de datos."""
     from sqlmodel import SQLModel, Session
     from db.session import engine
 
-    # IMPORTAR TODOS LOS MODELOS
     from models.user import User
     from models.emergency import Emergency
     from models.emergency_type import EmergencyType
@@ -81,56 +79,54 @@ def init_db():
     print("📊 Creando tablas en MariaDB...")
     SQLModel.metadata.create_all(engine)
     print("✅ Tablas creadas exitosamente")
-    
+
     print("👥 Verificando usuarios iniciales...")
     with Session(engine) as session:
         existing_users = session.query(User).count()
-        
+
         if existing_users == 0:
             print("📝 Insertando usuarios iniciales...")
             usuarios_iniciales = [
-
                 User(
-                    id_user=1, 
-                    username="villarrubia", 
-                    full_name="Villarrubia Gustavo", 
-                    disabled=False, 
+                    id_user=1,
+                    username="villarrubia",
+                    full_name="Villarrubia Gustavo",
+                    disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
                     cuil="12345678"
-                    ),
+                ),
                 User(
-                    id_user=2, 
-                    username="valle", 
-                    full_name="Valle Diego", 
-                    disabled=False, 
+                    id_user=2,
+                    username="valle",
+                    full_name="Valle Diego",
+                    disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
                     cuil="12345678"
-                    ),
+                ),
                 User(
-                    id_user=3, 
-                    username="lamas", 
-                    full_name="Lamas Maximiliano", 
-                    disabled=False, 
+                    id_user=3,
+                    username="lamas",
+                    full_name="Lamas Maximiliano",
+                    disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
                     cuil="12345678"
-                    ),
+                ),
                 User(
-                    id_user=4, 
-                    username="manzano", 
-                    full_name="Manzano Cesar", 
-                    disabled=False, 
+                    id_user=4,
+                    username="manzano",
+                    full_name="Manzano Cesar",
+                    disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
                     latitude=-34.6090,
                     longitude=-58.3720,
                     cuil="12345678"
-                    ),
-
+                ),
             ]
             session.add_all(usuarios_iniciales)
             session.commit()
@@ -139,8 +135,6 @@ def init_db():
             print(f"⚠️  Base de datos ya contiene {existing_users} usuarios. Saltando inserción.")
 
 # === Enlaces ===
-# Para estar mas comodos, propongo poner todos los enlaces en
-# estas funciones generales para poder separarlas mejor.
 InitLogInRoutes(app)
 InitUserRoutes(app)
 InitEmergencyExtraRoutes(app)
