@@ -73,7 +73,9 @@ def InitChatRoutes(app: FastAPI):
             raise HTTPException(status_code=401, detail="Token inválido")
 
         content_type = file.content_type or ""
-        if not content_type.startswith("image/"):
+        # Aceptar aunque content_type sea vacío o application/octet-stream
+        allowed = ["image/", "application/octet-stream", ""]
+        if not any(content_type.startswith(a) for a in allowed):
             from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="Solo se permiten imágenes")
 
