@@ -7,7 +7,6 @@ import os
 import uuid
 from datetime import datetime, timezone
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
-from fastapi.staticfiles import StaticFiles
 from jwt.exceptions import InvalidTokenError
 
 # Carpeta base donde se guardan las imágenes
@@ -15,10 +14,6 @@ IMAGES_BASE_DIR = "media/chat"
 
 
 def get_image_save_path(id_emergency: int) -> tuple[str, str]:
-    """
-    Devuelve (directorio, nombre_archivo) con estructura:
-    media/chat/2025/05/14/emergencia_7/uuid.jpg
-    """
     now = datetime.now(timezone.utc)
     relative_dir = os.path.join(
         IMAGES_BASE_DIR,
@@ -39,9 +34,6 @@ def InitChatRoutes(app: FastAPI):
     from services.chat_ws import chat_manager
     from services.utils import SECRET_KEY, ALGORITHM
     from repositories.user_repository import UserRepository
-
-    # Servir imágenes como archivos estáticos
-    app.mount("/media", StaticFiles(directory="media"), name="media")
 
     # ──────────────────────────────────────────
     # REST — historial de mensajes
@@ -69,7 +61,6 @@ def InitChatRoutes(app: FastAPI):
         token: str = Form(...),
         file: UploadFile = File(...),
     ):
-        # Validar token
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             username = payload.get("sub")
@@ -81,13 +72,11 @@ def InitChatRoutes(app: FastAPI):
             from fastapi import HTTPException
             raise HTTPException(status_code=401, detail="Token inválido")
 
-        # Validar tipo de archivo
         content_type = file.content_type or ""
         if not content_type.startswith("image/"):
             from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="Solo se permiten imágenes")
 
-        # Guardar archivo
         save_dir, filename = get_image_save_path(id_emergency)
         file_path = os.path.join(save_dir, filename)
 
@@ -95,11 +84,8 @@ def InitChatRoutes(app: FastAPI):
         with open(file_path, "wb") as f:
             f.write(content)
 
-        # URL pública relativa al servidor
-        # Ejemplo: /media/chat/2025/05/14/emergencia_7/abc123.jpg
         image_url = "/" + file_path.replace("\\", "/")
 
-        # Guardar mensaje con image_url
         msg = ChatMessageRepository.create(
             ChatMessageCreate(
                 id_emergency=id_emergency,
@@ -111,7 +97,6 @@ def InitChatRoutes(app: FastAPI):
             )
         )
 
-        # Broadcast a la sala
         await chat_manager.broadcast(
             {
                 "id_message": msg.id_message,
