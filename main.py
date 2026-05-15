@@ -33,9 +33,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Servir archivos estáticos (imágenes del chat)
-app.mount("/media", StaticFiles(directory="media"), name="media")
-
 @app.get("/", response_class=HTMLResponse)
 def home():
     return """
@@ -64,7 +61,6 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
     )
 
 def init_db():
-    """Inicializa la base de datos."""
     from sqlmodel import SQLModel, Session
     from db.session import engine
 
@@ -87,46 +83,18 @@ def init_db():
         if existing_users == 0:
             print("📝 Insertando usuarios iniciales...")
             usuarios_iniciales = [
-                User(
-                    id_user=1,
-                    username="villarrubia",
-                    full_name="Villarrubia Gustavo",
-                    disabled=False,
+                User(id_user=1, username="villarrubia", full_name="Villarrubia Gustavo", disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
-                    latitude=-34.6090,
-                    longitude=-58.3720,
-                    cuil="12345678"
-                ),
-                User(
-                    id_user=2,
-                    username="valle",
-                    full_name="Valle Diego",
-                    disabled=False,
+                    latitude=-34.6090, longitude=-58.3720, cuil="12345678"),
+                User(id_user=2, username="valle", full_name="Valle Diego", disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
-                    latitude=-34.6090,
-                    longitude=-58.3720,
-                    cuil="12345678"
-                ),
-                User(
-                    id_user=3,
-                    username="lamas",
-                    full_name="Lamas Maximiliano",
-                    disabled=False,
+                    latitude=-34.6090, longitude=-58.3720, cuil="12345678"),
+                User(id_user=3, username="lamas", full_name="Lamas Maximiliano", disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
-                    latitude=-34.6090,
-                    longitude=-58.3720,
-                    cuil="12345678"
-                ),
-                User(
-                    id_user=4,
-                    username="manzano",
-                    full_name="Manzano Cesar",
-                    disabled=False,
+                    latitude=-34.6090, longitude=-58.3720, cuil="12345678"),
+                User(id_user=4, username="manzano", full_name="Manzano Cesar", disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
-                    latitude=-34.6090,
-                    longitude=-58.3720,
-                    cuil="12345678"
-                ),
+                    latitude=-34.6090, longitude=-58.3720, cuil="12345678"),
             ]
             session.add_all(usuarios_iniciales)
             session.commit()
@@ -140,3 +108,6 @@ InitUserRoutes(app)
 InitEmergencyExtraRoutes(app)
 InitEmergencyRoutes(app)
 InitChatRoutes(app)
+
+# ✅ Mount al final para no interceptar rutas de la API
+app.mount("/media", StaticFiles(directory="media"), name="media")
