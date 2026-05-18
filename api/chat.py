@@ -5,26 +5,43 @@ api/chat.py
 import jwt
 import os
 import uuid
+import boto3
 from datetime import datetime, timezone
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from jwt.exceptions import InvalidTokenError
 
-# Carpeta base donde se guardan las imágenes
-IMAGES_BASE_DIR = "media/chat"
+# ── Configuración S3 ──────────────────────────────────────
+S3_BUCKET = os.getenv("S3_BUCKET", "amzn-s3-dar-files-test")
+S3_REGION = os.getenv("S3_REGION", "us-east-1")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 
-def get_image_save_path(id_emergency: int) -> tuple[str, str]:
-    now = datetime.now(timezone.utc)
-    relative_dir = os.path.join(
-        IMAGES_BASE_DIR,
-        str(now.year),
-        f"{now.month:02d}",
-        f"{now.day:02d}",
-        f"emergencia_{id_emergency}",
+def get_s3_client():
+    return boto3.client(
+        "s3",
+        region_name=S3_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
-    os.makedirs(relative_dir, exist_ok=True)
-    filename = f"{uuid.uuid4().hex}.jpg"
-    return relative_dir, filename
+
+
+def get_s3_key(id_emergency: int, filename: str) -> str:
+    """
+    Estructura: chat/2025/05/14/emergencia_7/uuid.jpg
+    """
+    now = datetime.now(timezone.utc)
+    return (
+        f"chat/{now.year}/{now.month:02d}/{now.day:02d}"
+        f"/emergencia_{id_emergency}/{filename}"
+    )
+
+
+def get_s3_url(key: str) -> str:
+    return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+
+
+# ─────────────────────────────────────────────────────────
 
 
 def InitChatRoutes(app: FastAPI):
@@ -48,19 +65,20 @@ def InitChatRoutes(app: FastAPI):
         return ChatMessageRepository.get_by_emergency(id_emergency)
 
     # ──────────────────────────────────────────
-    # REST — subir imagen
+    # REST — subir imagen a S3
     # ──────────────────────────────────────────
 
     @app.post(
         "/chat/{id_emergency}/upload-image/",
         tags=["chat"],
-        summary="Subir imagen al chat de una emergencia",
+        summary="Subir imagen al chat (S3)",
     )
     async def upload_chat_image(
         id_emergency: int,
         token: str = Form(...),
         file: UploadFile = File(...),
     ):
+        # Validar token
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             username = payload.get("sub")
@@ -72,22 +90,37 @@ def InitChatRoutes(app: FastAPI):
             from fastapi import HTTPException
             raise HTTPException(status_code=401, detail="Token inválido")
 
+        # Validar tipo de archivo
         content_type = file.content_type or ""
-        # Aceptar aunque content_type sea vacío o application/octet-stream
-        allowed = ["image/", "application/octet-stream", ""]
-        if not any(content_type.startswith(a) for a in allowed):
+        if content_type and not content_type.startswith("image/") and content_type != "application/octet-stream":
             from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="Solo se permiten imágenes")
 
-        save_dir, filename = get_image_save_path(id_emergency)
-        file_path = os.path.join(save_dir, filename)
-
+        # Leer contenido
         content = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(content)
 
-        image_url = "/" + file_path.replace("\\", "/")
+        # Generar key S3
+        filename = f"{uuid.uuid4().hex}.jpg"
+        s3_key = get_s3_key(id_emergency, filename)
 
+        # Subir a S3
+        try:
+            s3 = get_s3_client()
+            s3.put_object(
+                Bucket=S3_BUCKET,
+                Key=s3_key,
+                Body=content,
+                ContentType="image/jpeg",
+            )
+        except Exception as e:
+            from fastapi import HTTPException
+            print(f"❌ Error subiendo a S3: {e}")
+            raise HTTPException(status_code=500, detail=f"Error subiendo imagen: {str(e)}")
+
+        # URL pública
+        image_url = get_s3_url(s3_key)
+
+        # Guardar mensaje
         msg = ChatMessageRepository.create(
             ChatMessageCreate(
                 id_emergency=id_emergency,
@@ -99,6 +132,7 @@ def InitChatRoutes(app: FastAPI):
             )
         )
 
+        # Broadcast
         await chat_manager.broadcast(
             {
                 "id_message": msg.id_message,

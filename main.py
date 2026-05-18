@@ -1,7 +1,6 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 
@@ -12,13 +11,12 @@ from api.emergency_extra import InitEmergencyExtraRoutes
 from api.chat import InitChatRoutes
 from fastapi.middleware.cors import CORSMiddleware
 
-# Crear carpeta de imágenes si no existe
-os.makedirs("media/chat", exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -33,6 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/", response_class=HTMLResponse)
 def home():
     return """
@@ -44,6 +43,7 @@ def home():
         </body>
     </html>       
     """
+
 
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
@@ -59,6 +59,7 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
         """,
         status_code=exc.status_code
     )
+
 
 def init_db():
     from sqlmodel import SQLModel, Session
@@ -102,12 +103,10 @@ def init_db():
         else:
             print(f"⚠️  Base de datos ya contiene {existing_users} usuarios. Saltando inserción.")
 
+
 # === Enlaces ===
 InitLogInRoutes(app)
 InitUserRoutes(app)
 InitEmergencyExtraRoutes(app)
 InitEmergencyRoutes(app)
 InitChatRoutes(app)
-
-# ✅ Mount al final para no interceptar rutas de la API
-app.mount("/media", StaticFiles(directory="media"), name="media")
