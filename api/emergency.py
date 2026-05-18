@@ -15,7 +15,7 @@ def InitEmergencyRoutes(app: FastAPI):
     # -----------------------------
     # CREAR EMERGENCIA
     # -----------------------------
-    @app.post("/emergencies/")
+    @app.post("/emergencies/", tags=["emergencias"])
     async def send_emergency(
         emergency_request: EmergencyRequest,
         current_user: Annotated[User, Depends(get_current_active_user)],
@@ -31,7 +31,7 @@ def InitEmergencyRoutes(app: FastAPI):
     # -----------------------------
     # TIPOS POR CATEGORÍA (ROJO, AMARILLO VIOLETA)
     # -----------------------------
-    @app.get("/emergencies/types-by-category/")
+    @app.get("/emergencies/types-by-category/", tags=["emergencias"])
     async def get_types_by_category(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
@@ -65,7 +65,7 @@ def InitEmergencyRoutes(app: FastAPI):
     # -----------------------------
     # CANCELAR EMERGENCIA
     # -----------------------------
-    @app.post("/emergencies/{emergency_id}/cancel/")
+    @app.post("/emergencies/{emergency_id}/cancel/", tags=["emergencias"])
     async def cancel_emergency(
         emergency_id: int,
         current_user: Annotated[User, Depends(get_current_active_user)],
@@ -79,7 +79,7 @@ def InitEmergencyRoutes(app: FastAPI):
     # -----------------------------
     # ACEPTAR EMERGENCIA
     # -----------------------------
-    @app.post("/emergencies/{emergency_id}/accept/")
+    @app.post("/emergencies/{emergency_id}/accept/", tags=["emergencias"])
     async def accept_emergency(
         emergency_id: int,
         current_user: Annotated[User, Depends(get_current_active_user)],
@@ -93,7 +93,7 @@ def InitEmergencyRoutes(app: FastAPI):
     # -----------------------------
     # MARCAR LLEGADA
     # -----------------------------
-    @app.post("/emergencies/{emergency_id}/arrive/")
+    @app.post("/emergencies/{emergency_id}/arrive/", tags=["emergencias"])
     async def arrive_emergency(
         emergency_id: int,
         current_user: Annotated[User, Depends(get_current_active_user)],
@@ -106,7 +106,7 @@ def InitEmergencyRoutes(app: FastAPI):
     # -----------------------------
     # USUARIOS CERCANOS
     # -----------------------------
-    @app.get("/users/nearby/")
+    @app.get("/users/nearby/", tags=["usuarios"])
     async def get_nearby_users(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
@@ -115,7 +115,7 @@ def InitEmergencyRoutes(app: FastAPI):
     # -----------------------------
     # LISTAR EMERGENCIAS (ADMIN)
     # -----------------------------
-    @app.get("/admin/emergencies/")
+    @app.get("/admin/emergencies/", tags=["admin"])
     async def list_emergencies(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):

@@ -5,7 +5,7 @@ def InitEmergencyExtraRoutes(app: FastAPI):
     # -----------------------------
     # TIPOS DE EMERGENCIA (ACCIDENTES DE TRANSITO, VIOLENCIA DE GENERO, ROBOS, HURTOS)
     # -----------------------------
-    @app.get("/emergency/types")
+    @app.get("/emergency/types", tags=["emergencias"])
     def get_emergency_types():
         from repositories.emergency_repository import EmergencyRepository
 
@@ -29,7 +29,7 @@ def InitEmergencyExtraRoutes(app: FastAPI):
     # -----------------------------
     # RESPONDIENTES (QUIEN ACEPTO / QUIEN LLEGO REALMENTE)
     # -----------------------------
-    @app.get("/emergencies/{emergency_id}/responses")
+    @app.get("/emergencies/{emergency_id}/responses", tags=["emergencias"])
     def get_emergency_responses(emergency_id: int):
         from repositories.emergency_repository import EmergencyRepository
         from repositories.user_repository import UserRepository
@@ -55,7 +55,7 @@ def InitEmergencyExtraRoutes(app: FastAPI):
     # -----------------------------
     # DETALLE DE EMERGENCIA
     # -----------------------------
-    @app.get("/emergencies/{emergency_id}")
+    @app.get("/emergencies/{emergency_id}", tags=["emergencias"])
     def get_emergency_detail(emergency_id: int):
         from repositories.emergency_repository import EmergencyRepository
 

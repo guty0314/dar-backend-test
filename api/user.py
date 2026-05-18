@@ -19,7 +19,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # ACTUALIZAR POSICIÓN
     # ================================
-    @app.put("/users/me/position/")
+    @app.put("/users/me/position/", tags=["usuarios"])
     async def update_my_position(
         latitude: float,
         longitude: float,
@@ -30,7 +30,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # REGISTRAR TOKEN DISPOSITIVO
     # ================================
-    @app.put("/users/me/device_token/")
+    @app.put("/users/me/device_token/", tags=["usuarios"])
     async def register_device_token(
         device_token: str,
         current_user: Annotated[User, Depends(get_current_active_user)],
@@ -40,7 +40,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # OBTENER MI POSICIÓN
     # ================================
-    @app.get("/users/me/position/")
+    @app.get("/users/me/position/", tags=["usuarios"])
     async def get_my_position(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
@@ -49,7 +49,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # CREAR USUARIO (ADMIN)
     # ================================
-    @app.post("/users/", response_model=User)
+    @app.post("/users/", response_model=User, tags=["usuarios"])
     async def create_user(
         user: NewUserData,
         current_user: Annotated[User, Depends(admin_required)]
@@ -59,7 +59,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # LISTAR TODOS LOS USUARIOS (ADMIN)
     # ================================
-    @app.get("/admin/users/")
+    @app.get("/admin/users/", tags=["admin"])
     async def list_all_users(
         current_user: Annotated[User, Depends(admin_required)]
     ):
@@ -87,7 +87,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # CAMBIAR ROL (ADMIN)
     # ================================
-    @app.put("/admin/users/{username}/role/")
+    @app.put("/admin/users/{username}/role/", tags=["admin"])
     async def change_user_role(
         username: str,
         role: str,
@@ -98,7 +98,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # DESACTIVAR USUARIO (ADMIN)
     # ================================
-    @app.put("/admin/users/{username}/disable/")
+    @app.put("/admin/users/{username}/disable/", tags=["admin"])
     async def disable_user(
         username: str,
         current_user: Annotated[User, Depends(admin_required)]
@@ -108,7 +108,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # ACTIVAR USUARIO (ADMIN)
     # ================================
-    @app.put("/admin/users/{username}/enable/")
+    @app.put("/admin/users/{username}/enable/", tags=["admin"])
     async def enable_user(
         username: str,
         current_user: Annotated[User, Depends(admin_required)]
@@ -118,7 +118,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # MODIFICAR USUARIO (ADMIN)
     # ================================
-    @app.put("/admin/users/{username}/")
+    @app.put("/admin/users/{username}/", tags=["admin"])
     async def update_user(
         username: str,
         data: UpdateUserData,
@@ -129,7 +129,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # LOGOUT
     # ================================
-    @app.get("/users/logout/")
+    @app.get("/users/logout/", tags=["usuarios"])
     async def logout_user(
         current_user: Annotated[User, Depends(get_current_active_user)]
     ):
@@ -146,7 +146,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # SOLICITAR RESET DE CONTRASEÑA
     # ================================
-    @app.post("/users/password-reset/request/")
+    @app.post("/users/password-reset/request/", tags=["usuarios"])
     async def request_password_reset(username: str):
         user = UserRepository.get_user_by_username(username)
         if not user or not user.email:
@@ -161,7 +161,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # CONFIRMAR RESET DE CONTRASEÑA
     # ================================
-    @app.post("/users/password-reset/confirm/")
+    @app.post("/users/password-reset/confirm/", tags=["usuarios"])
     async def confirm_password_reset(token: str, new_password: str):
         username = consume_reset_token(token)
         if not username:
@@ -179,7 +179,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # VER MI USUARIO
     # ================================
-    @app.get("/users/me")
+    @app.get("/users/me", tags=["usuarios"])
     async def get_me(current_user: User = Depends(get_current_active_user)):
         return {
             "id": current_user.id_user,
@@ -194,7 +194,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # MIS EMERGENCIAS ENVIADAS
     # ================================
-    @app.get("/users/me/emergencies-sent")
+    @app.get("/users/me/emergencies-sent", tags=["usuarios"])
     async def get_my_emergencies_sent(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
@@ -222,7 +222,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # MIS EMERGENCIAS RESPONDIDAS
     # ================================
-    @app.get("/users/me/emergencies-responded")
+    @app.get("/users/me/emergencies-responded", tags=["usuarios"])
     async def get_my_emergencies_responded(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
@@ -252,7 +252,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # MIS EMERGENCIAS ESTADISTICAS
     # ================================
-    @app.get("/users/me/stats")
+    @app.get("/users/me/stats", tags=["usuarios"])
     async def get_my_stats(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ):
@@ -300,7 +300,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # ESTADISTICAS EMERGENCIAS PARA ADMIN
     # ================================
-    @app.get("/admin/stats")
+    @app.get("/admin/stats", tags=["admin"])
     async def get_admin_stats(
         current_user: Annotated[User, Depends(admin_required)],
     ):
@@ -339,7 +339,7 @@ def InitUserRoutes(app: FastAPI):
     # ================================
     # LOGS DE ACTIVIDAD (ADMIN)
     # ================================
-    @app.get("/admin/activity-logs")
+    @app.get("/admin/activity-logs", tags=["admin"])
     async def get_activity_logs(
         current_user: Annotated[User, Depends(admin_required)],
         limit: int = 200,
