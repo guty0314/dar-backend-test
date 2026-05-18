@@ -6,4 +6,4 @@ sqlmodel
 pymysql
 psycopg2
 fastapi-mail
-pip install boto3
+boto3
