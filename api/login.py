@@ -1,5 +1,6 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Form, HTTPException, status
 from services.token import TokenServices, Token
+form services.recaptcha import verify_recaptcha
 
 def InitLogInRoutes(app: FastAPI):
     # Es para recolectar la informacion de "username" y "password".
@@ -12,5 +13,14 @@ def InitLogInRoutes(app: FastAPI):
     @app.post("/token")
     async def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        captcha_token: str = Form(...)
     ) -> Token:
+        # Verificar el token de reCAPTCHA
+        captcha_valid = verify_recaptcha(captcha_token)
+        if not captcha_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Captcha Invalido. Por favor, intente nuevamente."
+            )
+        #Continuar con el proceso de login si el captcha es válido
         return TokenServices.login_for_access_token(form_data)
