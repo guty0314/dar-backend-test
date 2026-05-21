@@ -1,6 +1,6 @@
 from fastapi import Depends, FastAPI, Form, HTTPException, status
 from services.token import TokenServices, Token
-form services.recaptcha import verify_recaptcha
+from services.recaptcha import verify_recaptcha
 
 def InitLogInRoutes(app: FastAPI):
     # Es para recolectar la informacion de "username" y "password".
