@@ -7,7 +7,7 @@ def verify_recaptcha(token : str) -> bool:
     """Verify the reCAPTCHA token with Google's API."""
     url = "https://www.google.com/recaptcha/api/siteverify"
     payload = {
-        "secret": RECAPTCHA_SECRET,
+        "secret": RECAPTCHA_SECRET_KEY,
         "response": token
     }
     response = requests.post(url, data=payload)
