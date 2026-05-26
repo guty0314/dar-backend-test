@@ -8,6 +8,7 @@ import uuid
 import boto3
 from datetime import datetime, timezone
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
 from jwt.exceptions import InvalidTokenError
 
 # ── Configuración S3 ──────────────────────────────────────
@@ -27,9 +28,6 @@ def get_s3_client():
 
 
 def get_s3_key(id_emergency: int, filename: str) -> str:
-    """
-    Estructura: chat/2025/05/14/emergencia_7/uuid.jpg
-    """
     now = datetime.now(timezone.utc)
     return (
         f"chat/{now.year}/{now.month:02d}/{now.day:02d}"
@@ -37,8 +35,21 @@ def get_s3_key(id_emergency: int, filename: str) -> str:
     )
 
 
-def get_s3_url(key: str) -> str:
-    return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+def s3_key_from_url(image_url: str) -> str:
+    """Extrae el key de S3 desde la URL completa."""
+    # https://bucket.s3.region.amazonaws.com/key
+    prefix = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/"
+    if image_url.startswith(prefix):
+        return image_url[len(prefix):]
+    return image_url
+
+
+def get_proxy_url(base_url: str, image_url: str) -> str:
+    """Convierte una URL de S3 en una URL del proxy del backend."""
+    key = s3_key_from_url(image_url)
+    import urllib.parse
+    encoded_key = urllib.parse.quote(key, safe='')
+    return f"{base_url}/chat/image/?key={encoded_key}"
 
 
 # ─────────────────────────────────────────────────────────
@@ -46,6 +57,7 @@ def get_s3_url(key: str) -> str:
 
 def InitChatRoutes(app: FastAPI):
     from typing import List
+    from fastapi import HTTPException, Request
     from models.chat_message import ChatMessageCreate, ChatMessageRead
     from repositories.chat_message_repository import ChatMessageRepository
     from services.chat_ws import chat_manager
@@ -58,11 +70,47 @@ def InitChatRoutes(app: FastAPI):
 
     @app.get(
         "/chat/{id_emergency}/messages/",
-        response_model=List[ChatMessageRead],
         tags=["chat"],
     )
-    async def get_chat_history(id_emergency: int):
-        return ChatMessageRepository.get_by_emergency(id_emergency)
+    async def get_chat_history(id_emergency: int, request: Request):
+        messages = ChatMessageRepository.get_by_emergency(id_emergency)
+        base_url = str(request.base_url).rstrip("/")
+        result = []
+        for m in messages:
+            result.append({
+                "id_message": m.id_message,
+                "id_emergency": m.id_emergency,
+                "id_user": m.id_user,
+                "sender_name": m.sender_name,
+                "sender_role": m.sender_role,
+                "message": m.message,
+                "image_url": get_proxy_url(base_url, m.image_url) if m.image_url else None,
+                "timestamp": m.timestamp.isoformat() if m.timestamp else None,
+            })
+        return result
+
+    # ──────────────────────────────────────────
+    # REST — proxy de imágenes S3
+    # ──────────────────────────────────────────
+
+    @app.get(
+        "/chat/image/",
+        tags=["chat"],
+        summary="Proxy de imágenes del chat (S3 privado)",
+    )
+    async def get_chat_image(key: str):
+        """Descarga la imagen de S3 y la sirve al cliente."""
+        import urllib.parse
+        decoded_key = urllib.parse.unquote(key)
+        try:
+            s3 = get_s3_client()
+            response = s3.get_object(Bucket=S3_BUCKET, Key=decoded_key)
+            content_type = response.get("ContentType", "image/jpeg")
+            body = response["Body"]
+            return StreamingResponse(body, media_type=content_type)
+        except Exception as e:
+            print(f"❌ Error obteniendo imagen de S3: {e}")
+            raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
     # ──────────────────────────────────────────
     # REST — subir imagen a S3
@@ -75,6 +123,7 @@ def InitChatRoutes(app: FastAPI):
     )
     async def upload_chat_image(
         id_emergency: int,
+        request: Request,
         token: str = Form(...),
         file: UploadFile = File(...),
     ):
@@ -84,16 +133,13 @@ def InitChatRoutes(app: FastAPI):
             username = payload.get("sub")
             current_user = UserRepository.get_user_by_username(username)
             if not current_user:
-                from fastapi import HTTPException
                 raise HTTPException(status_code=401, detail="Usuario no encontrado")
         except InvalidTokenError:
-            from fastapi import HTTPException
             raise HTTPException(status_code=401, detail="Token inválido")
 
         # Validar tipo de archivo
         content_type = file.content_type or ""
         if content_type and not content_type.startswith("image/") and content_type != "application/octet-stream":
-            from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="Solo se permiten imágenes")
 
         # Leer contenido
@@ -113,14 +159,17 @@ def InitChatRoutes(app: FastAPI):
                 ContentType="image/jpeg",
             )
         except Exception as e:
-            from fastapi import HTTPException
             print(f"❌ Error subiendo a S3: {e}")
             raise HTTPException(status_code=500, detail=f"Error subiendo imagen: {str(e)}")
 
-        # URL pública
-        image_url = get_s3_url(s3_key)
+        # Guardar URL de S3 en la DB (URL interna, no pública)
+        image_url_s3 = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
 
-        # Guardar mensaje
+        # Generar URL del proxy para el broadcast
+        base_url = str(request.base_url).rstrip("/")
+        proxy_url = get_proxy_url(base_url, image_url_s3)
+
+        # Guardar mensaje con URL de S3
         msg = ChatMessageRepository.create(
             ChatMessageCreate(
                 id_emergency=id_emergency,
@@ -128,11 +177,11 @@ def InitChatRoutes(app: FastAPI):
                 sender_name=current_user.full_name or current_user.username,
                 sender_role=current_user.role if hasattr(current_user, "role") else "usuario",
                 message="📷 Imagen",
-                image_url=image_url,
+                image_url=image_url_s3,
             )
         )
 
-        # Broadcast
+        # Broadcast con URL del proxy
         await chat_manager.broadcast(
             {
                 "id_message": msg.id_message,
@@ -141,7 +190,7 @@ def InitChatRoutes(app: FastAPI):
                 "sender_name": msg.sender_name,
                 "sender_role": msg.sender_role,
                 "message": msg.message,
-                "image_url": msg.image_url,
+                "image_url": proxy_url,
                 "timestamp": msg.timestamp.isoformat(),
             },
             id_emergency,
@@ -149,7 +198,7 @@ def InitChatRoutes(app: FastAPI):
 
         return {
             "ok": True,
-            "image_url": image_url,
+            "image_url": proxy_url,
             "id_message": msg.id_message,
         }
 
