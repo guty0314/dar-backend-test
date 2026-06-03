@@ -86,6 +86,31 @@ class EmergencyRepository:
             return session.get(EmergencyCategory, id_category)
         
     @staticmethod
+    def claim_emergency(emergency_id: int, user_id: int) -> tuple[bool, str]:
+        with Session(engine) as session:
+            emergency = session.get(Emergency, emergency_id)
+            if not emergency:
+                return False, "not_found"
+            if emergency.claimed_by is not None and emergency.claimed_by != user_id:
+                return False, "already_claimed"
+            emergency.claimed_by = user_id
+            session.add(emergency)
+            session.commit()
+            return True, "ok"
+
+    @staticmethod
+    def release_emergency(emergency_id: int, user_id: int) -> bool:
+        with Session(engine) as session:
+            emergency = session.get(Emergency, emergency_id)
+            if not emergency:
+                return False
+            if emergency.claimed_by == user_id:
+                emergency.claimed_by = None
+                session.add(emergency)
+                session.commit()
+            return True
+
+    @staticmethod
     def get_emergencies_by_user(user_id: int):
         with Session(engine) as session:
             return session.exec(

@@ -136,6 +136,8 @@ def InitEmergencyRoutes(app: FastAPI):
 
                     category = categories.get(type_obj.id_category)
 
+                    claimer = UserRepository.get_user_by_id(e.claimed_by) if e.claimed_by else None
+
                     result.append({
                         "id": e.id_emergency,
                         "username": user.username if user else None,
@@ -150,6 +152,8 @@ def InitEmergencyRoutes(app: FastAPI):
                         "id_user": e.id_user,
                         "active": e.active,
                         "date_created": str(e.date_created) if e.date_created else None,
+                        "claimed_by": e.claimed_by,
+                        "claimed_by_name": claimer.full_name or claimer.username if claimer else None,
                     })
 
                 except Exception as inner_e:

@@ -1,6 +1,38 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
+from typing import Annotated
 
 def InitEmergencyExtraRoutes(app: FastAPI):
+
+    from models.user import User
+    from services.user import get_current_active_user
+
+    # -----------------------------
+    # TOMAR EMERGENCIA (OPERADOR)
+    # -----------------------------
+    @app.post("/emergencies/{emergency_id}/claim/", tags=["emergencias"])
+    def claim_emergency(
+        emergency_id: int,
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+        ok, reason = EmergencyRepository.claim_emergency(emergency_id, current_user.id_user)
+        if not ok:
+            if reason == "already_claimed":
+                raise HTTPException(status_code=409, detail="La emergencia ya fue tomada por otro operador")
+            raise HTTPException(status_code=404, detail="Emergencia no encontrada")
+        return {"ok": True}
+
+    # -----------------------------
+    # LIBERAR EMERGENCIA (OPERADOR)
+    # -----------------------------
+    @app.post("/emergencies/{emergency_id}/release/", tags=["emergencias"])
+    def release_emergency(
+        emergency_id: int,
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+        EmergencyRepository.release_emergency(emergency_id, current_user.id_user)
+        return {"ok": True}
 
     # -----------------------------
     # TIPOS DE EMERGENCIA (ACCIDENTES DE TRANSITO, VIOLENCIA DE GENERO, ROBOS, HURTOS)

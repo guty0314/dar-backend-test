@@ -44,6 +44,12 @@ class Emergency(SQLModel, table=True):
         index=True
     )
 
+    claimed_by: int | None = Field(
+        default=None,
+        foreign_key="public.user.id_user",
+        nullable=True
+    )
+
     # -----------------------------
     # MÉTODOS
     # -----------------------------
