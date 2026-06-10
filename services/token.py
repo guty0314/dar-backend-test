@@ -1,8 +1,11 @@
+import logging
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordRequestForm
 from services.user import UserServices
+
+logger = logging.getLogger(__name__)
 
 
 class Token(BaseModel):
@@ -41,8 +44,7 @@ class TokenServices:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        print(" LOGIN EJECUTADO ")
-        print("Role del usuario:", user.role)
+        logger.info(f"Login exitoso: {user.username} (role: {user.role})")
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 

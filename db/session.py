@@ -1,20 +1,20 @@
 from sqlmodel import create_engine, Session
 from dotenv import load_dotenv
+import logging
 import os
 
 load_dotenv()
 
-# Primer intentamos obtener la base de datos de prueba
+logger = logging.getLogger(__name__)
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
-    # BASE DE DATOS SERVIDOR DE PRUEBA (Render)
-    print("Usando base de datos de PRODUCCIÓN (Render)")
+    logger.info("Usando base de datos de PRODUCCIÓN (Render)")
     engine = create_engine(DATABASE_URL, echo=os.getenv("DB_ECHO", "false").lower() == "true")
 
 else:
-    # BASE DE DATOS CON SERVIDOR (AMAZON)
-    print("Usando base de datos SERVIDOR (Postgre)")
+    logger.info("Usando base de datos SERVIDOR (Postgre)")
 
     DB_HOST = os.getenv("DB_HOST", "localhost")
     DB_PORT = os.getenv("DB_PORT", "3306")

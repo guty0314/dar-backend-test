@@ -1,10 +1,17 @@
 import os
+import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 from api.user import InitUserRoutes
 from api.login import InitLogInRoutes
@@ -78,16 +85,16 @@ def init_db():
     from models.activity_log import ActivityLog
     from models.chat_message import ChatMessage
 
-    print("📊 Creando tablas en MariaDB...")
+    logger.info("Creando tablas en la base de datos...")
     SQLModel.metadata.create_all(engine)
-    print("✅ Tablas creadas exitosamente")
+    logger.info("Tablas creadas exitosamente")
 
-    print("👥 Verificando usuarios iniciales...")
+    logger.info("Verificando usuarios iniciales...")
     with Session(engine) as session:
         existing_users = session.query(User).count()
 
         if existing_users == 0:
-            print("📝 Insertando usuarios iniciales...")
+            logger.info("Insertando usuarios iniciales...")
             usuarios_iniciales = [
                 User(id_user=1, username="villarrubia", full_name="Villarrubia Gustavo", disabled=False,
                     hashed_password="$argon2id$v=19$m=65536,t=3,p=4$Lu6pKMPN9Yw4y4BhxIJMZA$HG0f97fVWgSukmZyn93eVsmgLBzGr5hrXa9S283oEJs",
@@ -104,9 +111,9 @@ def init_db():
             ]
             session.add_all(usuarios_iniciales)
             session.commit()
-            print(f"✅ {len(usuarios_iniciales)} usuarios insertados exitosamente")
+            logger.info(f"{len(usuarios_iniciales)} usuarios insertados exitosamente")
         else:
-            print(f"⚠️  Base de datos ya contiene {existing_users} usuarios. Saltando inserción.")
+            logger.info(f"Base de datos ya contiene {existing_users} usuarios. Saltando inserción.")
 
 
 # === Enlaces ===

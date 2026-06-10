@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
@@ -8,7 +9,7 @@ from repositories.user_repository import UserRepository
 from models.user import User
 from services.email_service import send_user_credentials
 
-print(" SERVICES.USER CARGADO ")
+logger = logging.getLogger(__name__)
 
 
 class NewUserData(BaseModel):
@@ -103,7 +104,7 @@ class UserServices:
         created_user = UserRepository.create_user(new_user)
 
         if created_user.email:
-            print("INTENTANDO ENVIAR MAIL A:", created_user.email)
+            logger.info(f"Enviando credenciales a: {created_user.email}")
             try:
                 await send_user_credentials(
                     created_user.email,
@@ -111,7 +112,7 @@ class UserServices:
                     user.password
                 )
             except Exception as e:
-                print("Error enviando correo:", e)
+                logger.error(f"Error enviando correo a {created_user.email}: {e}")
 
         return created_user
 

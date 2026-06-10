@@ -1,9 +1,12 @@
+import logging
 from fastapi import BackgroundTasks, WebSocket, WebSocketDisconnect
 from services.emergencyring import Ring
 from models.emergency import Emergency, EmergencyRequest
 from models.user import User
 from models.emergency_response import EmergencyResponse
 from datetime import datetime, timezone, timedelta
+
+logger = logging.getLogger(__name__)
 
 
 class EmergencyServices:
@@ -75,7 +78,7 @@ class EmergencyServices:
 
         except Exception as e:
             send_result = {"error": str(e)}
-            print("Notification error:", e)
+            logger.error(f"Notification error: {e}")
 
         return {
             "emergency_id": emergency_record.id_emergency,
@@ -368,7 +371,7 @@ class EmergencyServices:
                 await asyncio.sleep(10)
 
         except WebSocketDisconnect:
-            print(f"WebSocket disconnected for user: {current_user.username}")
+            logger.info(f"WebSocket desconectado: {current_user.username}")
 
     # -----------------------------
     # WEBSOCKET ALERTA GENERAL
@@ -454,4 +457,4 @@ class EmergencyServices:
                     pass
 
         except WebSocketDisconnect:
-            print(f"WebSocket disconnected for user: {current_user.username}")
+            logger.info(f"WebSocket desconectado: {current_user.username}")

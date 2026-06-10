@@ -1,6 +1,9 @@
 # services/recaptcha.py
+import logging
 import os
 import requests
+
+logger = logging.getLogger(__name__)
 
 # ── Configuración ──────────────────────────────────────────
 # Podés cambiar el proveedor con la variable CAPTCHA_PROVIDER
@@ -28,7 +31,7 @@ def verify_recaptcha(token: str) -> bool:
 def _verify_google_recaptcha(token: str) -> bool:
     """Verifica con Google reCAPTCHA v2."""
     if not RECAPTCHA_SECRET_KEY:
-        print("⚠️ RECAPTCHA_SECRET_KEY no configurada")
+        logger.warning("RECAPTCHA_SECRET_KEY no configurada")
         return False
     try:
         response = requests.post(
@@ -39,14 +42,14 @@ def _verify_google_recaptcha(token: str) -> bool:
         result = response.json()
         return result.get("success", False)
     except Exception as e:
-        print(f"❌ Error verificando reCAPTCHA: {e}")
+        logger.error(f"Error verificando reCAPTCHA: {e}")
         return False
 
 
 def _verify_turnstile(token: str) -> bool:
     """Verifica con Cloudflare Turnstile."""
     if not TURNSTILE_SECRET_KEY:
-        print("⚠️ TURNSTILE_SECRET_KEY no configurada")
+        logger.warning("TURNSTILE_SECRET_KEY no configurada")
         return False
     try:
         response = requests.post(
@@ -57,5 +60,5 @@ def _verify_turnstile(token: str) -> bool:
         result = response.json()
         return result.get("success", False)
     except Exception as e:
-        print(f"❌ Error verificando Turnstile: {e}")
+        logger.error(f"Error verificando Turnstile: {e}")
         return False

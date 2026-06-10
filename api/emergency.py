@@ -1,5 +1,8 @@
+import logging
 from fastapi import Depends, FastAPI, BackgroundTasks, WebSocket
 from repositories.user_repository import UserRepository
+
+logger = logging.getLogger(__name__)
 
 
 def InitEmergencyRoutes(app: FastAPI):
@@ -131,7 +134,7 @@ def InitEmergencyRoutes(app: FastAPI):
                     type_obj = types.get(e.id_type)
 
                     if not type_obj:
-                        print(f"⚠️ Tipo inexistente: {e.id_type}")
+                        logger.warning(f"Tipo de emergencia inexistente: {e.id_type}")
                         continue
 
                     category = categories.get(type_obj.id_category)
@@ -157,9 +160,7 @@ def InitEmergencyRoutes(app: FastAPI):
                     })
 
                 except Exception as inner_e:
-                    import traceback
-                    print(f"❌ Error procesando emergencia {e.id_emergency}: {inner_e}")
-                    traceback.print_exc()
+                    logger.exception(f"Error procesando emergencia {e.id_emergency}: {inner_e}")
                     continue
 
             return result

@@ -2,10 +2,13 @@
 api/chat.py
 """
 
+import logging
 import jwt
 import os
 import uuid
 import boto3
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timezone
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
@@ -128,7 +131,7 @@ def InitChatRoutes(app: FastAPI):
             body = response["Body"]
             return StreamingResponse(body, media_type=content_type)
         except Exception as e:
-            print(f"❌ Error obteniendo imagen de S3: {e}")
+            logger.error(f"Error obteniendo imagen de S3: {e}")
             raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
     # ──────────────────────────────────────────
@@ -178,7 +181,7 @@ def InitChatRoutes(app: FastAPI):
                 ContentType="image/jpeg",
             )
         except Exception as e:
-            print(f"❌ Error subiendo a S3: {e}")
+            logger.error(f"Error subiendo a S3: {e}")
             raise HTTPException(status_code=500, detail=f"Error subiendo imagen: {str(e)}")
 
         # Guardar URL de S3 en la DB (URL interna, no pública)
@@ -249,7 +252,7 @@ def InitChatRoutes(app: FastAPI):
             return
 
         chat_manager.rooms.setdefault(id_emergency, []).append(websocket)
-        print(f"✅ Chat WS: {current_user.username} se unió a sala {id_emergency}")
+        logger.info(f"Chat WS: {current_user.username} se unió a sala {id_emergency}")
 
         try:
             while True:
@@ -287,4 +290,4 @@ def InitChatRoutes(app: FastAPI):
 
         except WebSocketDisconnect:
             chat_manager.disconnect(websocket, id_emergency)
-            print(f"🔌 Chat WS: {current_user.username} salió de sala {id_emergency}")
+            logger.info(f"Chat WS: {current_user.username} salió de sala {id_emergency}")

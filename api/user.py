@@ -1,8 +1,11 @@
+import logging
 from fastapi import Depends, FastAPI, HTTPException, Request
 from typing import Annotated, List
 from services.user import UpdateUserData
 from services.email_service import send_user_credentials
 from services.limiter import limiter
+
+logger = logging.getLogger(__name__)
 
 def InitUserRoutes(app: FastAPI):
     from models.user import User
@@ -157,7 +160,7 @@ def InitUserRoutes(app: FastAPI):
         try:
             await send_password_reset_token(user.email, user.username, token)
         except Exception as e:
-            print("Error enviando email de reset:", e)
+            logger.error(f"Error enviando email de reset: {e}")
         return {"msg": "Si el usuario existe y tiene email, recibirá instrucciones."}
 
     # ================================
