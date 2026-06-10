@@ -13,6 +13,36 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+def _validate_env():
+    faltantes = []
+
+    if not os.getenv("SECRET_KEY"):
+        faltantes.append("SECRET_KEY")
+
+    if not os.getenv("DATABASE_URL"):
+        faltantes.append("DATABASE_URL")
+
+    skip_captcha = os.getenv("SKIP_CAPTCHA", "false").lower() == "true"
+    if not skip_captcha:
+        provider = os.getenv("CAPTCHA_PROVIDER", "recaptcha")
+        if provider == "turnstile" and not os.getenv("TURNSTILE_SECRET_KEY"):
+            faltantes.append("TURNSTILE_SECRET_KEY")
+        elif provider == "recaptcha" and not os.getenv("RECAPTCHA_SECRET_KEY"):
+            faltantes.append("RECAPTCHA_SECRET_KEY")
+
+    if faltantes:
+        logger.critical(f"Faltan variables de entorno requeridas: {', '.join(faltantes)}")
+        raise RuntimeError(f"Variables de entorno faltantes: {', '.join(faltantes)}")
+
+    for opcional in ["MAIL_USERNAME", "AWS_ACCESS_KEY_ID", "GOOGLE_APPLICATION_CREDENTIALS"]:
+        if not os.getenv(opcional):
+            logger.warning(f"Variable opcional no configurada: {opcional}")
+
+
+_validate_env()
+
+
 from api.user import InitUserRoutes
 from api.login import InitLogInRoutes
 from api.emergency import InitEmergencyRoutes
