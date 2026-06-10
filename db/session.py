@@ -10,7 +10,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     # BASE DE DATOS SERVIDOR DE PRUEBA (Render)
     print("Usando base de datos de PRODUCCIÓN (Render)")
-    engine = create_engine(DATABASE_URL, echo=True)
+    engine = create_engine(DATABASE_URL, echo=os.getenv("DB_ECHO", "false").lower() == "true")
 
 else:
     # BASE DE DATOS CON SERVIDOR (AMAZON)
@@ -25,7 +25,7 @@ else:
 
     DATABASE_URL = f"{DB_ENGINE}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-    engine = create_engine(DATABASE_URL, echo=True)
+    engine = create_engine(DATABASE_URL, echo=os.getenv("DB_ECHO", "false").lower() == "true")
 
 
 def get_session():

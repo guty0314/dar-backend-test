@@ -56,11 +56,13 @@ def get_proxy_url(base_url: str, image_url: str) -> str:
 
 
 def InitChatRoutes(app: FastAPI):
-    from typing import List
-    from fastapi import HTTPException, Request
+    from typing import Annotated
+    from fastapi import Depends, HTTPException, Request
     from models.chat_message import ChatMessageCreate, ChatMessageRead
+    from models.user import User
     from repositories.chat_message_repository import ChatMessageRepository
     from services.chat_ws import chat_manager
+    from services.user import get_current_active_user
     from services.utils import SECRET_KEY, ALGORITHM
     from repositories.user_repository import UserRepository
 
@@ -72,7 +74,24 @@ def InitChatRoutes(app: FastAPI):
         "/chat/{id_emergency}/messages/",
         tags=["chat"],
     )
-    async def get_chat_history(id_emergency: int, request: Request):
+    async def get_chat_history(
+        id_emergency: int,
+        request: Request,
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+
+        emergency = EmergencyRepository.get_emergency_by_id(id_emergency)
+        if not emergency:
+            raise HTTPException(status_code=404, detail="Emergencia no encontrada")
+
+        es_admin = current_user.role == "admin"
+        es_creador = emergency.id_user == current_user.id_user
+        es_respondedor = emergency.claimed_by == current_user.id_user
+
+        if not (es_admin or es_creador or es_respondedor):
+            raise HTTPException(status_code=403, detail="Sin acceso a esta emergencia")
+
         messages = ChatMessageRepository.get_by_emergency(id_emergency)
         base_url = str(request.base_url).rstrip("/")
         result = []

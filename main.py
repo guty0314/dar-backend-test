@@ -3,6 +3,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from api.user import InitUserRoutes
 from api.login import InitLogInRoutes
@@ -10,6 +12,7 @@ from api.emergency import InitEmergencyRoutes
 from api.emergency_extra import InitEmergencyExtraRoutes
 from api.chat import InitChatRoutes
 from fastapi.middleware.cors import CORSMiddleware
+from services.limiter import limiter
 
 
 @asynccontextmanager
@@ -19,6 +22,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,

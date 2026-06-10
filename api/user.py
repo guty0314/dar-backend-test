@@ -1,7 +1,8 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from typing import Annotated, List
 from services.user import UpdateUserData
 from services.email_service import send_user_credentials
+from services.limiter import limiter
 
 def InitUserRoutes(app: FastAPI):
     from models.user import User
@@ -147,7 +148,8 @@ def InitUserRoutes(app: FastAPI):
     # SOLICITAR RESET DE CONTRASEÑA
     # ================================
     @app.post("/users/password-reset/request/", tags=["usuarios"])
-    async def request_password_reset(username: str):
+    @limiter.limit("3/minute")
+    async def request_password_reset(request: Request, username: str):
         user = UserRepository.get_user_by_username(username)
         if not user or not user.email:
             return {"msg": "Si el usuario existe y tiene email, recibirá instrucciones."}
@@ -162,7 +164,8 @@ def InitUserRoutes(app: FastAPI):
     # CONFIRMAR RESET DE CONTRASEÑA
     # ================================
     @app.post("/users/password-reset/confirm/", tags=["usuarios"])
-    async def confirm_password_reset(token: str, new_password: str):
+    @limiter.limit("5/minute")
+    async def confirm_password_reset(request: Request, token: str, new_password: str):
         username = consume_reset_token(token)
         if not username:
             raise HTTPException(status_code=400, detail="Token inválido o expirado")

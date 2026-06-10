@@ -7,7 +7,7 @@ _reset_tokens: dict = {}
 TOKEN_EXPIRY_SECONDS = 900  # 15 minutos
 
 def generate_reset_token(username: str) -> str:
-    token = secrets.token_urlsafe(32)
+    token = f"{secrets.randbelow(1000000):06d}"
     _reset_tokens[token] = {
         "username": username,
         "expires": time.time() + TOKEN_EXPIRY_SECONDS
