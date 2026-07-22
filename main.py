@@ -49,6 +49,7 @@ from api.emergency import InitEmergencyRoutes
 from api.emergency_extra import InitEmergencyExtraRoutes
 from api.chat import InitChatRoutes
 from api.account_request import InitAccountRequestRoutes
+from api.app_config import InitAppConfigRoutes
 from fastapi.middleware.cors import CORSMiddleware
 from services.limiter import limiter
 
@@ -118,6 +119,7 @@ def init_db():
     from models.activity_log import ActivityLog
     from models.chat_message import ChatMessage
     from models.account_request import AccountRequest
+    from models.app_config import AppConfig
 
     logger.info("Creando tablas en la base de datos...")
     SQLModel.metadata.create_all(engine)
@@ -157,3 +159,4 @@ InitEmergencyExtraRoutes(app)
 InitEmergencyRoutes(app)
 InitChatRoutes(app)
 InitAccountRequestRoutes(app)
+InitAppConfigRoutes(app)
