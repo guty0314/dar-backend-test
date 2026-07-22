@@ -1,8 +1,9 @@
 import logging
+import re
 import secrets
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from models.account_request import AccountRequest
 from models.user import User
@@ -12,6 +13,8 @@ from services.email_service import send_user_credentials, send_account_request_r
 
 logger = logging.getLogger(__name__)
 
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
 
 class NewAccountRequestData(BaseModel):
     full_name: str
@@ -20,6 +23,30 @@ class NewAccountRequestData(BaseModel):
     jerarquia: str
     email: str
     destino: str
+
+    @field_validator("username")
+    @classmethod
+    def username_must_be_numeric(cls, v: str) -> str:
+        v = v.strip()
+        if not v.isdigit():
+            raise ValueError("El legajo debe contener solo números")
+        return v
+
+    @field_validator("cuil")
+    @classmethod
+    def cuil_must_be_numeric(cls, v: str) -> str:
+        v = v.strip()
+        if not v.isdigit():
+            raise ValueError("El CUIL debe contener solo números")
+        return v
+
+    @field_validator("email")
+    @classmethod
+    def email_must_be_valid(cls, v: str) -> str:
+        v = v.strip()
+        if not EMAIL_REGEX.match(v):
+            raise ValueError("El email no es válido")
+        return v
 
 
 class ApproveRequestData(BaseModel):
@@ -36,14 +63,8 @@ class AccountRequestServices:
     def create_request(data: NewAccountRequestData) -> AccountRequest:
         if not data.full_name:
             raise HTTPException(status_code=400, detail="El nombre y apellido es obligatorio")
-        if not data.username:
-            raise HTTPException(status_code=400, detail="El legajo es obligatorio")
-        if not data.cuil:
-            raise HTTPException(status_code=400, detail="El CUIL es obligatorio")
         if not data.jerarquia:
             raise HTTPException(status_code=400, detail="La jerarquía es obligatoria")
-        if not data.email:
-            raise HTTPException(status_code=400, detail="El email es obligatorio")
         if not data.destino:
             raise HTTPException(status_code=400, detail="El destino es obligatorio")
 
