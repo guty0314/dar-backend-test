@@ -1,7 +1,7 @@
 import os
 import logging
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 from slowapi import _rate_limit_exceeded_handler
@@ -93,17 +93,25 @@ def home():
 
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
-    return HTMLResponse(
-        """
-        <html>
-            <head><title>404</title></head>
-            <body style="font-family: Arial; text-align:center; margin-top:80px;">
-                <h1>Error 404</h1>
-                <p>Página inexistente</p>
-            </body>
-        </html>
-        """,
-        status_code=exc.status_code
+    # Solo las rutas inexistentes (404) muestran la página HTML bonita.
+    # El resto (400, 401, 403, etc.) deben devolver JSON con el detail real,
+    # si no el frontend no puede mostrar el motivo real del error.
+    if exc.status_code == 404:
+        return HTMLResponse(
+            """
+            <html>
+                <head><title>404</title></head>
+                <body style="font-family: Arial; text-align:center; margin-top:80px;">
+                    <h1>Error 404</h1>
+                    <p>Página inexistente</p>
+                </body>
+            </html>
+            """,
+            status_code=404
+        )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
     )
 
 
