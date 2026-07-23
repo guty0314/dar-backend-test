@@ -20,6 +20,7 @@ class NewAccountRequestData(BaseModel):
     full_name: str
     username: str  # legajo
     cuil: str
+    number_phone: str
     jerarquia: str
     email: str
     destino: str
@@ -63,6 +64,8 @@ class AccountRequestServices:
     def create_request(data: NewAccountRequestData) -> AccountRequest:
         if not data.full_name:
             raise HTTPException(status_code=400, detail="El nombre y apellido es obligatorio")
+        if not data.number_phone:
+            raise HTTPException(status_code=400, detail="El celular es obligatorio")
         if not data.jerarquia:
             raise HTTPException(status_code=400, detail="La jerarquía es obligatoria")
         if not data.destino:
@@ -78,6 +81,7 @@ class AccountRequestServices:
             full_name=data.full_name,
             username=data.username,
             cuil=data.cuil,
+            number_phone=data.number_phone,
             jerarquia=data.jerarquia,
             email=data.email,
             destino=data.destino,
@@ -106,6 +110,7 @@ class AccountRequestServices:
             username=request.username,
             email=request.email,
             cuil=request.cuil,
+            number_phone=request.number_phone,
             hashed_password=hashed_password,
             role=role,
             last_position_update=None,

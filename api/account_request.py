@@ -52,6 +52,7 @@ def InitAccountRequestRoutes(app: FastAPI):
                 "full_name": r.full_name,
                 "username": r.username,
                 "cuil": r.cuil,
+                "number_phone": r.number_phone,
                 "jerarquia": r.jerarquia,
                 "email": r.email,
                 "destino": r.destino,

@@ -14,6 +14,7 @@ class AccountRequest(SQLModel, table=True):
     full_name: str
     username: str  # legajo
     cuil: str
+    number_phone: str
     jerarquia: str
     email: str
     destino: str
