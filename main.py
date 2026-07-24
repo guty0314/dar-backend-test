@@ -117,6 +117,7 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
 
 def init_db():
     from sqlmodel import SQLModel, Session
+    from sqlalchemy import text
     from db.session import engine
 
     from models.user import User
@@ -132,6 +133,20 @@ def init_db():
     logger.info("Creando tablas en la base de datos...")
     SQLModel.metadata.create_all(engine)
     logger.info("Tablas creadas exitosamente")
+
+    # create_all() solo crea tablas que no existen, no agrega columnas nuevas
+    # a tablas ya existentes. Estas ALTER cubren ese caso para columnas
+    # agregadas después del primer deploy de cada tabla.
+    logger.info("Verificando columnas nuevas en tablas existentes...")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(
+                "ALTER TABLE public.account_request ADD COLUMN IF NOT EXISTS number_phone VARCHAR"
+            ))
+            conn.commit()
+        logger.info("Columnas verificadas")
+    except Exception as e:
+        logger.warning(f"No se pudo verificar/agregar columnas nuevas (¿motor de DB distinto a Postgres?): {e}")
 
     logger.info("Verificando usuarios iniciales...")
     with Session(engine) as session:
