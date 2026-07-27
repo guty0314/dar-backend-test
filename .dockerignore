@@ -1,0 +1,12 @@
+.env
+.env_old
+.git
+.gitignore
+venv
+.venv
+__pycache__
+*.pyc
+app.db
+test.db
+*.md
+.claude
