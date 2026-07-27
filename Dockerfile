@@ -1,13 +1,13 @@
 FROM python:3.13-slim
 
 # openssh-client + autossh: túnel hacia la RDS a través del bastion EC2
-# gcc + libpq-dev: necesarios para compilar psycopg2 (no es psycopg2-binary)
+# build-essential (gcc + libc6-dev) + libpq-dev: necesarios para compilar psycopg2 (no es psycopg2-binary)
 # netcat-openbsd: usado por el entrypoint para esperar a que el túnel esté arriba
 RUN apt-get update && apt-get install -y --no-install-recommends \
         openssh-client \
         autossh \
         netcat-openbsd \
-        gcc \
+        build-essential \
         libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
