@@ -14,14 +14,20 @@ if [ -n "$TUNNEL_SSH_HOST" ]; then
   cp "$TUNNEL_SSH_KEY_PATH" "$KEY_PATH"
   chmod 600 "$KEY_PATH"
 
-  autossh -M 0 -f -N \
+  # Sin -f: así el proceso queda adjunto a este shell y cualquier error de
+  # SSH (auth, timeout, host inalcanzable) se ve en los logs de Render en
+  # vez de perderse en segundo plano.
+  autossh -M 0 -N \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
+    -o BatchMode=yes \
+    -o ConnectTimeout=10 \
     -o ServerAliveInterval=30 \
     -o ServerAliveCountMax=3 \
+    -o ExitOnForwardFailure=yes \
     -i "$KEY_PATH" \
     -L "${TUNNEL_LOCAL_PORT}:${TUNNEL_REMOTE_HOST}:${TUNNEL_REMOTE_PORT}" \
-    "${TUNNEL_SSH_USER}@${TUNNEL_SSH_HOST}"
+    "${TUNNEL_SSH_USER}@${TUNNEL_SSH_HOST}" &
 
   echo "Esperando a que el túnel esté activo..."
   for i in $(seq 1 15); do
