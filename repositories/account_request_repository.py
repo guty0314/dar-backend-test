@@ -43,6 +43,16 @@ class AccountRequestRepository:
             ).first()
 
     @staticmethod
+    def get_latest_by_username_and_cuil(username: str, cuil: str) -> AccountRequest | None:
+        with Session(engine) as session:
+            return session.exec(
+                select(AccountRequest).where(
+                    AccountRequest.username == username,
+                    AccountRequest.cuil == cuil,
+                ).order_by(AccountRequest.created_at.desc())
+            ).first()
+
+    @staticmethod
     def mark_approved(id_request: int, reviewer_username: str) -> AccountRequest | None:
         with Session(engine) as session:
             request = session.get(AccountRequest, id_request)

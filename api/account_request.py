@@ -38,6 +38,28 @@ def InitAccountRequestRoutes(app: FastAPI):
         return {"msg": "Solicitud enviada correctamente", "id_request": created.id_request}
 
     # ================================
+    # CONSULTAR ESTADO DE SOLICITUD (PÚBLICO)
+    # ================================
+    @app.get("/account-requests/status/", tags=["account-requests"])
+    @limiter.limit("5/minute")
+    async def get_account_request_status(
+        request: Request,
+        username: str,
+        cuil: str,
+    ):
+        found = AccountRequestRepository.get_latest_by_username_and_cuil(username, cuil)
+        if not found:
+            raise HTTPException(status_code=404, detail="No encontramos una solicitud con esos datos")
+
+        return {
+            "full_name": found.full_name,
+            "status": found.status,
+            "created_at": found.created_at,
+            "reviewed_at": found.reviewed_at,
+            "rejection_reason": found.rejection_reason,
+        }
+
+    # ================================
     # LISTAR SOLICITUDES (ADMIN)
     # ================================
     @app.get("/admin/account-requests/", tags=["admin"])
