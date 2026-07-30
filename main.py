@@ -1,11 +1,18 @@
 import os
 import logging
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+
+# Carga el archivo .env ANTES de validar variables de entorno.
+# En Render las variables se inyectan directo por la plataforma (esto es un
+# no-op ahí), pero en despliegues que dependen de un archivo .env real
+# (ej. Lightsail) esto es indispensable para que _validate_env() las vea.
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,7 +67,12 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
+    )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
