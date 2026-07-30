@@ -40,7 +40,10 @@ class UserServices:
         if not user.verify_password(password):
             return False
         if user.disabled:
-            return False
+            raise HTTPException(
+                status_code=403,
+                detail="Tu cuenta está deshabilitada. Contactate con un administrador.",
+            )
         return user
 
     @staticmethod
