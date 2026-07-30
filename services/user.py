@@ -39,6 +39,8 @@ class UserServices:
             return False
         if not user.verify_password(password):
             return False
+        if user.disabled:
+            return False
         return user
 
     @staticmethod
