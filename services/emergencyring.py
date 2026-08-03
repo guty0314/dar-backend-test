@@ -19,8 +19,8 @@ class Ring:
         self,
         latitude: float,
         longitude: float,
-        inner_radius_m: float = 500.0,
-        outer_radius_m: float = 600.0,
+        inner_radius_m: float = 1000.0,
+        outer_radius_m: float = 1500.0,
     ) -> None:
         self.latitude = float(latitude)
         self.longitude = float(longitude)

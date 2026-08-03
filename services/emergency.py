@@ -269,8 +269,8 @@ class EmergencyServices:
         ring = Ring(
             latitude=float(current_user.latitude),
             longitude=float(current_user.longitude),
-            inner_radius_m=500,
-            outer_radius_m=1000
+            inner_radius_m=1000,
+            outer_radius_m=1500
         )
 
         users_list = UserRepository.get_all_users()
@@ -419,7 +419,7 @@ class EmergencyServices:
                     if emergency_time.tzinfo is None:
                         emergency_time = emergency_time.replace(tzinfo=timezone.utc)
 
-                    if now - emergency_time > timedelta(minutes=10):
+                    if now - emergency_time > timedelta(minutes=20):
                         emergency.disable_emergency()
                         await websocket.send_json({"status": 0})
                         await asyncio.sleep(3)
