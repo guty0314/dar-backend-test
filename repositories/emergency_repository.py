@@ -145,3 +145,29 @@ class EmergencyRepository:
                 .where(EmergencyResponse.id_user == user_id)
                 .order_by(EmergencyResponse.response_date.desc())
             ).all()
+
+    @staticmethod
+    def get_pending_response_for_user(user_id: int) -> int | None:
+        """
+        Devuelve el id_emergency de una emergencia activa que el usuario
+        aceptó pero todavía no marcó llegada, si existe.
+        """
+        from models.emergency_response import EmergencyResponse
+        from models.emergency import Emergency
+
+        with Session(engine) as session:
+            result = session.exec(
+                select(Emergency)
+                .join(
+                    EmergencyResponse,
+                    EmergencyResponse.id_emergency == Emergency.id_emergency
+                )
+                .where(
+                    EmergencyResponse.id_user == user_id,
+                    EmergencyResponse.accepted == True,
+                    EmergencyResponse.arrived == False,
+                    Emergency.active == True,
+                )
+                .order_by(EmergencyResponse.response_date.desc())
+            ).first()
+            return result.id_emergency if result else None

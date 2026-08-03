@@ -51,6 +51,17 @@ def InitUserRoutes(app: FastAPI):
         return UserServices.get_my_position(current_user)
 
     # ================================
+    # EMERGENCIA PENDIENTE (aceptada sin marcar llegada)
+    # ================================
+    @app.get("/users/me/pending-emergency/", tags=["usuarios"])
+    async def get_my_pending_emergency(
+        current_user: Annotated[User, Depends(get_current_active_user)],
+    ):
+        from repositories.emergency_repository import EmergencyRepository
+        emergency_id = EmergencyRepository.get_pending_response_for_user(current_user.id_user)
+        return {"emergency_id": emergency_id}
+
+    # ================================
     # CREAR USUARIO (ADMIN)
     # ================================
     @app.post("/users/", response_model=User, tags=["usuarios"])
